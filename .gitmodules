@@ -1,0 +1,4 @@
+[submodule "src/edk2"]
+	path = src/edk2
+	url = https://github.com/tianocore/edk2.git
+	ignore = untracked
