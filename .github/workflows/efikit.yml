@@ -1,0 +1,35 @@
+name: UEFI Userspace Development Kit
+
+on: [push]
+
+jobs:
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+        with:
+          submodules: true
+      - name: Autotools
+        run: |
+          ./autogen.sh
+      - name: Configure
+        run: |
+          ./configure
+      - name: Build
+        run: |
+          make
+      - name: Test
+        run: |
+          make check
+      - name: Upload failure artifacts
+        uses: actions/upload-artifact@v1
+        if: failure()
+        with:
+          name: failed
+          path: .
+      - name: Distribution
+        run: |
+          make distcheck
