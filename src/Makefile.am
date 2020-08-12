@@ -9,6 +9,7 @@ AM_CFLAGS = \
 
 noinst_LTLIBRARIES = \
 	libmdebase.la \
+	libmdebasedebugnull.la \
 	libmdebasememory.la \
 	libmdebaseprint.la
 
@@ -63,6 +64,19 @@ libmdebase_la_CFLAGS = \
 	-D_PCD_GET_MODE_32_PcdMaximumLinkedListLength=1000000 \
 	-D_PCD_GET_MODE_32_PcdMaximumAsciiStringLength=1000000 \
 	-D_PCD_GET_MODE_32_PcdMaximumUnicodeStringLength=1000000 \
+	$(AM_CFLAGS)
+
+###############################################################################
+#
+# edk2/MdePkg/Library/BaseDebugLibNull
+#
+###############################################################################
+
+libmdebasedebugnull_la_SOURCES = \
+	edk2/MdePkg/Library/BaseDebugLibNull/DebugLib.c
+
+libmdebasedebugnull_la_CFLAGS = \
+	-Wno-unused-parameter \
 	$(AM_CFLAGS)
 
 ###############################################################################
