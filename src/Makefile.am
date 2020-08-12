@@ -8,7 +8,8 @@ AM_CFLAGS = \
 	-ffunction-sections -fdata-sections -Wl,--gc-sections
 
 noinst_LTLIBRARIES = \
-	libmdebase.la
+	libmdebase.la \
+	libmdebasememory.la
 
 ###############################################################################
 #
@@ -62,3 +63,28 @@ libmdebase_la_CFLAGS = \
 	-D_PCD_GET_MODE_32_PcdMaximumAsciiStringLength=1000000 \
 	-D_PCD_GET_MODE_32_PcdMaximumUnicodeStringLength=1000000 \
 	$(AM_CFLAGS)
+
+###############################################################################
+#
+# edk2/MdePkg/Library/BaseMemoryLib
+#
+###############################################################################
+
+libmdebasememory_la_SOURCES = \
+	edk2/MdePkg/Library/BaseMemoryLib/CompareMemWrapper.c \
+	edk2/MdePkg/Library/BaseMemoryLib/CopyMem.c \
+	edk2/MdePkg/Library/BaseMemoryLib/CopyMemWrapper.c \
+	edk2/MdePkg/Library/BaseMemoryLib/IsZeroBufferWrapper.c \
+	edk2/MdePkg/Library/BaseMemoryLib/MemLibGeneric.c \
+	edk2/MdePkg/Library/BaseMemoryLib/MemLibGuid.c \
+	edk2/MdePkg/Library/BaseMemoryLib/MemLibInternals.h \
+	edk2/MdePkg/Library/BaseMemoryLib/ScanMem16Wrapper.c \
+	edk2/MdePkg/Library/BaseMemoryLib/ScanMem32Wrapper.c \
+	edk2/MdePkg/Library/BaseMemoryLib/ScanMem64Wrapper.c \
+	edk2/MdePkg/Library/BaseMemoryLib/ScanMem8Wrapper.c \
+	edk2/MdePkg/Library/BaseMemoryLib/SetMem16Wrapper.c \
+	edk2/MdePkg/Library/BaseMemoryLib/SetMem32Wrapper.c \
+	edk2/MdePkg/Library/BaseMemoryLib/SetMem64Wrapper.c \
+	edk2/MdePkg/Library/BaseMemoryLib/SetMem.c \
+	edk2/MdePkg/Library/BaseMemoryLib/SetMemWrapper.c \
+	edk2/MdePkg/Library/BaseMemoryLib/ZeroMemWrapper.c
