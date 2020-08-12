@@ -12,7 +12,8 @@ noinst_LTLIBRARIES = \
 	libmdebase.la \
 	libmdebasedebugnull.la \
 	libmdebasememory.la \
-	libmdebaseprint.la
+	libmdebaseprint.la \
+	libmdeuefidevicepath.la
 
 ###############################################################################
 #
@@ -129,4 +130,23 @@ libmdebaseprint_la_CFLAGS = \
 	-Wno-implicit-fallthrough \
 	-D_PCD_GET_MODE_32_PcdMaximumAsciiStringLength=1000000 \
 	-D_PCD_GET_MODE_32_PcdMaximumUnicodeStringLength=1000000 \
+	$(AM_CFLAGS)
+
+###############################################################################
+#
+# edk2/MdePkg/Library/UefiDevicePathLib
+#
+###############################################################################
+
+libmdeuefidevicepath_la_SOURCES = \
+	edk2/MdePkg/Library/UefiDevicePathLib/DevicePathFromText.c \
+	edk2/MdePkg/Library/UefiDevicePathLib/DevicePathToText.c \
+	edk2/MdePkg/Library/UefiDevicePathLib/DevicePathUtilities.c \
+	edk2/MdePkg/Library/UefiDevicePathLib/UefiDevicePathLib.c \
+	edk2/MdePkg/Library/UefiDevicePathLib/UefiDevicePathLib.h
+
+libmdeuefidevicepath_la_CFLAGS = \
+	-fshort-wchar \
+	-Wno-unused-parameter \
+	-D_PCD_GET_MODE_32_PcdMaximumDevicePathNodeCount=1000000 \
 	$(AM_CFLAGS)
