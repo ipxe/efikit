@@ -9,7 +9,8 @@ AM_CFLAGS = \
 
 noinst_LTLIBRARIES = \
 	libmdebase.la \
-	libmdebasememory.la
+	libmdebasememory.la \
+	libmdebaseprint.la
 
 ###############################################################################
 #
@@ -88,3 +89,20 @@ libmdebasememory_la_SOURCES = \
 	edk2/MdePkg/Library/BaseMemoryLib/SetMem.c \
 	edk2/MdePkg/Library/BaseMemoryLib/SetMemWrapper.c \
 	edk2/MdePkg/Library/BaseMemoryLib/ZeroMemWrapper.c
+
+###############################################################################
+#
+# edk2/MdePkg/Library/BasePrintLib
+#
+###############################################################################
+
+libmdebaseprint_la_SOURCES = \
+	edk2/MdePkg/Library/BasePrintLib/PrintLib.c \
+	edk2/MdePkg/Library/BasePrintLib/PrintLibInternal.c \
+	edk2/MdePkg/Library/BasePrintLib/PrintLibInternal.h
+
+libmdebaseprint_la_CFLAGS = \
+	-Wno-implicit-fallthrough \
+	-D_PCD_GET_MODE_32_PcdMaximumAsciiStringLength=1000000 \
+	-D_PCD_GET_MODE_32_PcdMaximumUnicodeStringLength=1000000 \
+	$(AM_CFLAGS)
