@@ -8,10 +8,20 @@ AM_CFLAGS = \
 	-ffunction-sections -fdata-sections -Wl,--gc-sections
 
 noinst_LTLIBRARIES = \
+	libcommon.la \
 	libmdebase.la \
 	libmdebasedebugnull.la \
 	libmdebasememory.la \
 	libmdebaseprint.la
+
+###############################################################################
+#
+# Common utility functions
+#
+###############################################################################
+
+libcommon_la_SOURCES = \
+	memalloc.c
 
 ###############################################################################
 #
