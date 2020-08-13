@@ -7,7 +7,31 @@ AM_CFLAGS = \
 	-W -Wall -Wextra -Werror \
 	-ffunction-sections -fdata-sections -Wl,--gc-sections
 
+lib_LTLIBRARIES = \
+	libefidevpath.la
+
 noinst_LTLIBRARIES = \
+	libcommon.la \
+	libmdebase.la \
+	libmdebasedebugnull.la \
+	libmdebasememory.la \
+	libmdebaseprint.la \
+	libmdeuefidevicepath.la
+
+###############################################################################
+#
+# EFI device path library
+#
+###############################################################################
+
+libefidevpath_la_SOURCES = \
+	libefidevpath.c
+
+libefidevpath_la_LDFLAGS = \
+	-export-symbols-regex '^efidp_' \
+	$(AM_LDFLAGS)
+
+libefidevpath_la_LIBADD = \
 	libcommon.la \
 	libmdebase.la \
 	libmdebasedebugnull.la \
