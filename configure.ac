@@ -16,6 +16,9 @@ LT_INIT([shared pic-only disable-static])
 # Configure automake
 AM_INIT_AUTOMAKE([foreign subdir-objects tar-ustar])
 
+# Check for libraries
+PKG_CHECK_MODULES(GLIB, glib-2.0)
+
 # Checks
 AC_CHECK_HEADERS([])
 AC_FUNC_MALLOC

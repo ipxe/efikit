@@ -7,6 +7,9 @@ AM_CFLAGS = \
 	-W -Wall -Wextra -Werror \
 	-ffunction-sections -fdata-sections -Wl,--gc-sections
 
+bin_PROGRAMS = \
+	efidevpath
+
 lib_LTLIBRARIES = \
 	libefidevpath.la
 
@@ -20,7 +23,7 @@ noinst_LTLIBRARIES = \
 
 ###############################################################################
 #
-# EFI device path library
+# EFI device path library and command-line tool
 #
 ###############################################################################
 
@@ -38,6 +41,17 @@ libefidevpath_la_LIBADD = \
 	libmdebasememory.la \
 	libmdebaseprint.la \
 	libmdeuefidevicepath.la
+
+efidevpath_SOURCES = \
+	efidevpath.c
+
+efidevpath_CPPFLAGS = \
+	$(GLIB_CFLAGS) \
+	$(AM_CPPFLAGS)
+
+efidevpath_LDADD = \
+	libefidevpath.la \
+	$(GLIB_LIBS)
 
 ###############################################################################
 #
