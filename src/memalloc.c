@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause-Patent
  *
  * MemoryAllocationLib compatible API providing memory allocation via
- * the standard POSIX malloc()/free() API.
+ * the standard platform malloc()/free() API.
  *
  */
 
@@ -14,14 +14,18 @@
 #include <Library/BaseMemoryLib.h>
 #include <Library/MemoryAllocationLib.h>
 
+#include "config.h"
+
 /*****************************************************************************
  *
- * POSIX memory allocation helper functions
+ * Platform memory allocation helper functions
  *
  *****************************************************************************
  */
 
-STATIC VOID * PosixAllocate ( IN UINTN AllocationSize, IN UINTN Alignment ) {
+#if HAVE_DECL_POSIX_MEMALIGN
+
+STATIC VOID * PlatformAllocate ( IN UINTN AllocationSize, IN UINTN Alignment ) {
 	VOID *Buffer;
 
 	if ( Alignment < sizeof ( void * ) )
@@ -31,9 +35,29 @@ STATIC VOID * PosixAllocate ( IN UINTN AllocationSize, IN UINTN Alignment ) {
 	return Buffer;
 }
 
-STATIC VOID PosixFree ( IN VOID *Buffer ) {
+STATIC VOID PlatformFree ( IN VOID *Buffer ) {
 	free ( Buffer );
 }
+
+#elif HAVE_DECL__ALIGNED_MALLOC
+
+STATIC VOID * PlatformAllocate ( IN UINTN AllocationSize, IN UINTN Alignment ) {
+
+	if ( Alignment < sizeof ( void * ) )
+		Alignment = sizeof ( void * );
+	return _aligned_malloc ( AllocationSize, Alignment );
+}
+
+STATIC VOID PlatformFree ( IN VOID *Buffer ) {
+	_aligned_free ( Buffer );
+}
+
+#else
+
+#error "No platform memory allocation found found"
+
+#endif
+
 
 /*****************************************************************************
  *
@@ -59,7 +83,7 @@ VOID EFIAPI FreePages ( IN VOID *Buffer, IN UINTN Pages ) {
 }
 
 VOID * EFIAPI AllocateAlignedPages ( IN UINTN Pages, IN UINTN Alignment ) {
-	return PosixAllocate ( Pages * EFI_PAGE_SIZE, Alignment );
+	return PlatformAllocate ( Pages * EFI_PAGE_SIZE, Alignment );
 }
 
 VOID * EFIAPI AllocateAlignedRuntimePages ( IN UINTN Pages,
@@ -73,12 +97,12 @@ VOID * EFIAPI AllocateAlignedReservedPages ( IN UINTN Pages,
 }
 
 VOID EFIAPI FreeAlignedPages ( IN VOID *Buffer, IN UINTN Pages ) {
-	PosixFree ( Buffer );
+	PlatformFree ( Buffer );
 	( VOID ) Pages;
 }
 
 VOID * EFIAPI AllocatePool ( IN UINTN AllocationSize ) {
-	return PosixAllocate ( AllocationSize, 0 );
+	return PlatformAllocate ( AllocationSize, 0 );
 }
 
 VOID * EFIAPI AllocateRuntimePool ( IN UINTN AllocationSize ) {
@@ -149,5 +173,5 @@ VOID * EFIAPI ReallocateReservedPool ( IN UINTN OldSize, IN UINTN NewSize,
 }
 
 VOID EFIAPI FreePool ( IN VOID *Buffer ) {
-	PosixFree ( Buffer );
+	PlatformFree ( Buffer );
 }

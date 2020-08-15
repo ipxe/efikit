@@ -23,6 +23,8 @@ PKG_CHECK_MODULES(GLIB, glib-2.0)
 AC_CHECK_HEADERS([])
 AC_FUNC_MALLOC
 AC_CHECK_FUNCS([])
+AC_CHECK_DECLS([posix_memalign], [], [], [[#include <stdlib.h>]])
+AC_CHECK_DECLS([_aligned_malloc], [], [], [[#include <malloc.h>]])
 
 # Generate files
 AC_CONFIG_FILES([Makefile src/Makefile include/Makefile])
