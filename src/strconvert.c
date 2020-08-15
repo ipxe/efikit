@@ -18,6 +18,7 @@
 #include <Library/BaseLib.h>
 
 #include "strconvert.h"
+#include "config.h"
 
 /** Buffer size increment */
 #define BUFSZ 512
@@ -34,7 +35,7 @@
  * The output string is allocated using malloc() and must eventually
  * be freed by the caller.
  */
-static void * convert_string ( char *in, size_t inlen,
+static void * convert_string ( ICONV_CONST char *in, size_t inlen,
 			       const char *incode, const char *outcode ) {
 	void *buf = NULL;
 	size_t len = 0;

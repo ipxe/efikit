@@ -40,7 +40,8 @@ libefidevpath_la_LIBADD = \
 	libmdebasedebugnull.la \
 	libmdebasememory.la \
 	libmdebaseprint.la \
-	libmdeuefidevicepath.la
+	libmdeuefidevicepath.la \
+	$(LTLIBICONV)
 
 efidevpath_SOURCES = \
 	efidevpath.c
