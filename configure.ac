@@ -11,7 +11,7 @@ AC_PROG_CXX
 AM_PROG_AR
 
 # Configure libtool
-LT_INIT([shared pic-only disable-static])
+LT_INIT([shared pic-only disable-static win32-dll])
 
 # Configure automake
 AM_INIT_AUTOMAKE([foreign subdir-objects tar-ustar])
