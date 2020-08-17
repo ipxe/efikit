@@ -24,6 +24,15 @@ noinst_LTLIBRARIES = \
 	libmdebaseprint.la \
 	libmdeuefidevicepath.la
 
+check_PROGRAMS = \
+	efidevpathtest
+
+TESTS = $(check_PROGRAMS)
+
+BUILT_SOURCES =
+
+MAINTAINERCLEANFILES =
+
 ###############################################################################
 #
 # EFI device path library and command-line tool
@@ -56,6 +65,24 @@ efidevpath_CPPFLAGS = \
 efidevpath_LDADD = \
 	libefidevpath.la \
 	$(GLIB_LIBS)
+
+efidevpathtest_SOURCES = \
+	efidevpathtest.cpp
+
+EXTRA_efidevpathtest_SOURCES = \
+	efidevpathtest.hpp
+
+BUILT_SOURCES += \
+	efidevpathtest.cpp
+
+MAINTAINERCLEANFILES += \
+	efidevpathtest.cpp
+
+efidevpathtest.cpp : $(EXTRA_efidevpathtest_SOURCES)
+	cxxtestgen --runner=ErrorPrinter -o $@ $<
+
+efidevpathtest_LDADD = \
+	libefidevpath.la
 
 ###############################################################################
 #

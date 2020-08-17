@@ -12,7 +12,7 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y -o Acquire::Retries=50 \
-            gettext
+            gettext cxxtest
       - name: Check out code
         uses: actions/checkout@v2
         with:
@@ -42,7 +42,7 @@ jobs:
     steps:
       - name: Install packages
         run: |
-          dnf install -y git make libtool gettext-devel \
+          dnf install -y git make libtool gettext-devel cxxtest \
             mingw64-gcc mingw64-win-iconv mingw64-glib2 \
             wine-common wine-systemd
       - name: Configure environment
@@ -57,6 +57,9 @@ jobs:
           QQMINGWPATH=$(printf '%q' ${QMINGWPATH})
           sed -i "s/^\(\"PATH\"=.*\)\"$/\1;${QQMINGWPATH}\"/" \
             ~/.wine/system.reg
+          # Use host headers for cxxtest
+          ln -s /usr/include/cxxtest \
+            /usr/x86_64-w64-mingw32/sys-root/mingw/include/cxxtest
       - name: Check out code
         uses: actions/checkout@v2
         with:
