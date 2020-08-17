@@ -35,7 +35,7 @@
  * The output string is allocated using malloc() and must eventually
  * be freed by the caller.
  */
-static void * convert_string ( ICONV_CONST char *in, size_t inlen,
+static void * convert_string ( const char *in, size_t inlen,
 			       const char *incode, const char *outcode ) {
 	void *buf = NULL;
 	size_t len = 0;
@@ -63,7 +63,7 @@ static void * convert_string ( ICONV_CONST char *in, size_t inlen,
 		out = ( buf + len - outlen );
 
 		/* Convert as much input as possible */
-		if ( iconv ( cd, &in, &inlen, &out,
+		if ( iconv ( cd, ( ( ICONV_CONST char ** ) &in ), &inlen, &out,
 			     &outlen ) != ( ( size_t ) -1 ) ) {
 			break;
 		}
@@ -93,7 +93,7 @@ static void * convert_string ( ICONV_CONST char *in, size_t inlen,
  * The output string is allocated using malloc() and must eventually
  * be freed by the caller.
  */
-CHAR16 * utf8_to_efi ( char *utf8 ) {
+CHAR16 * utf8_to_efi ( const char *utf8 ) {
 	size_t len = ( strlen ( utf8 ) + 1 /* NUL */ );
 	return convert_string ( utf8, len, "UTF8", "UCS-2LE" );
 }
@@ -107,7 +107,7 @@ CHAR16 * utf8_to_efi ( char *utf8 ) {
  * The output string is allocated using malloc() and must eventually
  * be freed by the caller.
  */
-char * efi_to_utf8 ( CHAR16 *efi ) {
+char * efi_to_utf8 ( const CHAR16 *efi ) {
 	size_t len = ( ( StrLen ( efi ) + 1 /* wNUL */ ) * sizeof ( efi[0] ) );
 	return convert_string ( ( ( char * ) efi ), len, "UCS-2LE", "UTF8" );
 }

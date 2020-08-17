@@ -12,7 +12,7 @@
 
 #include <Uefi/UefiBaseType.h>
 
-extern CHAR16 * utf8_to_efi ( char *utf8 );
-extern char * efi_to_utf8 ( CHAR16 *efi );
+extern CHAR16 * utf8_to_efi ( const char *utf8 );
+extern char * efi_to_utf8 ( const CHAR16 *efi );
 
 #endif /* _STRCONVERT_H */

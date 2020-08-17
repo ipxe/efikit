@@ -45,7 +45,7 @@ EFI_GUID gEfiPersistentVirtualCdGuid = EFI_PERSISTENT_VIRTUAL_CD_GUID;
  * @v max_len		Maximum length of device path (or 0 to ignore length)
  * @ret valid		Device path is valid
  */
-bool efidp_valid ( void *path, size_t max_len ) {
+bool efidp_valid ( const void *path, size_t max_len ) {
 	return IsDevicePathValid ( path, max_len );
 }
 
@@ -55,7 +55,7 @@ bool efidp_valid ( void *path, size_t max_len ) {
  * @v path		EFI device path
  * @ret len		Length of device path in bytes (including terminator)
  */
-size_t efidp_len ( EFI_DEVICE_PATH_PROTOCOL *path ) {
+size_t efidp_len ( const EFI_DEVICE_PATH_PROTOCOL *path ) {
 	return UefiDevicePathLibGetDevicePathSize ( path );
 }
 
@@ -65,7 +65,7 @@ size_t efidp_len ( EFI_DEVICE_PATH_PROTOCOL *path ) {
  * @v text		Textual representation (in UTF-8)
  * @ret path		EFI device path, or NULL on error
  */
-EFI_DEVICE_PATH_PROTOCOL * efidp_from_text ( char *text ) {
+EFI_DEVICE_PATH_PROTOCOL * efidp_from_text ( const char *text ) {
 	CHAR16 *efitext;
 	EFI_DEVICE_PATH_PROTOCOL *efidp;
 
@@ -102,7 +102,7 @@ EFI_DEVICE_PATH_PROTOCOL * efidp_from_text ( char *text ) {
  * The UEFI specification is remarkably vague on the difference
  * between @c display_only and @c allow_shortcuts.
  */
-char * efidp_to_text ( EFI_DEVICE_PATH_PROTOCOL *path, bool display_only,
+char * efidp_to_text ( const EFI_DEVICE_PATH_PROTOCOL *path, bool display_only,
 		       bool allow_shortcuts ) {
 	CHAR16 *efitext;
 	char *text;
