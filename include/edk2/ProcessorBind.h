@@ -112,4 +112,19 @@
 
 #define NO_MSABI_VA_FUNCS
 
+/******************************************************************************
+ *
+ * Fix compilation as C++
+ *
+ ******************************************************************************
+ *
+ * The EDK2 headers may generally be compiled via an extern "C"
+ * wrapper, with the notable exception of the _Static_assert() macro
+ * which is C-only.
+ *
+ */
+#ifdef __cplusplus
+#define _Static_assert static_assert
+#endif
+
 #endif /* _PROCESSOR_BIND_WRAPPER_H */
