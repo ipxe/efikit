@@ -35,15 +35,28 @@ jobs:
         run: |
           make distcheck
 
-  windows:
-    name: Windows
+  mingw:
+    name: MinGW
     runs-on: ubuntu-latest
     container: fedora
     steps:
       - name: Install packages
         run: |
           dnf install -y git make libtool gettext-devel \
-            mingw64-gcc mingw64-win-iconv mingw64-glib2 wine-core
+            mingw64-gcc mingw64-win-iconv mingw64-glib2 \
+            wine-common wine-systemd
+      - name: Configure environment
+        run: |
+          # Initialise ~/.wine directory
+          mkdir ~/.wine
+          wineboot -i
+          wineserver -w
+          # Patch ~/.wine/system.reg to include path to MinGW libraries
+          MINGWPATH=$(winepath -w /usr/x86_64-w64-mingw32/sys-root/mingw/bin)
+          QMINGWPATH=$(printf '%q' ${MINGWPATH})
+          QQMINGWPATH=$(printf '%q' ${QMINGWPATH})
+          sed -i "s/^\(\"PATH\"=.*\)\"$/\1;${QQMINGWPATH}\"/" \
+            ~/.wine/system.reg
       - name: Check out code
         uses: actions/checkout@v2
         with:
@@ -53,7 +66,7 @@ jobs:
           ./autogen.sh
           ./configure --build= --host=x86_64-w64-mingw32
           make
-          make check
+          wine ./src/efidevpath.exe -h
       - name: Upload failure artifacts
         uses: actions/upload-artifact@v2
         if: failure()
