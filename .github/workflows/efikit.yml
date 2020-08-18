@@ -24,11 +24,13 @@ jobs:
           make
           make check
       - name: Upload failure artifacts
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v2
         if: failure()
         with:
           name: failed
-          path: .
+          path: |
+            .
+            !src/edk2
       - name: Distribution
         run: |
           make distcheck
@@ -53,8 +55,10 @@ jobs:
           make
           make check
       - name: Upload failure artifacts
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v2
         if: failure()
         with:
           name: failed
-          path: .
+          path: |
+            .
+            !src/edk2
