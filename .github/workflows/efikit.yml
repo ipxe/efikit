@@ -12,7 +12,7 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y -o Acquire::Retries=50 \
-            gettext cxxtest
+            gettext libcmocka-dev
       - name: Check out code
         uses: actions/checkout@v2
         with:
@@ -42,8 +42,8 @@ jobs:
     steps:
       - name: Install packages
         run: |
-          dnf install -y git make libtool gettext-devel cxxtest \
-            mingw64-gcc mingw64-win-iconv mingw64-glib2 \
+          dnf install -y git make libtool gettext-devel \
+            mingw64-gcc mingw64-win-iconv mingw64-glib2 mingw64-cmocka \
             wine-common wine-systemd
       - name: Configure environment
         run: |
@@ -57,9 +57,6 @@ jobs:
           QQMINGWPATH=$(printf '%q' ${QMINGWPATH})
           sed -i "s/^\(\"PATH\"=.*\)\"$/\1;${QQMINGWPATH}\"/" \
             ~/.wine/system.reg
-          # Use host headers for cxxtest
-          ln -s /usr/include/cxxtest \
-            /usr/x86_64-w64-mingw32/sys-root/mingw/include/cxxtest
       - name: Check out code
         uses: actions/checkout@v2
         with:

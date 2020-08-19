@@ -29,10 +29,6 @@ check_PROGRAMS = \
 
 TESTS = $(check_PROGRAMS)
 
-BUILT_SOURCES =
-
-MAINTAINERCLEANFILES =
-
 ###############################################################################
 #
 # EFI device path library and command-line tool
@@ -67,22 +63,15 @@ efidevpath_LDADD = \
 	$(GLIB_LIBS)
 
 efidevpathtest_SOURCES = \
-	efidevpathtest.cpp
+	efidevpathtest.c
 
-EXTRA_efidevpathtest_SOURCES = \
-	efidevpathtest.hpp
-
-BUILT_SOURCES += \
-	efidevpathtest.cpp
-
-MAINTAINERCLEANFILES += \
-	efidevpathtest.cpp
-
-efidevpathtest.cpp : $(EXTRA_efidevpathtest_SOURCES)
-	cxxtestgen --runner=ErrorPrinter -o $@ $<
+efidevpathtest_CPPFLAGS = \
+	$(CMOCKA_CFLAGS) \
+	$(AM_CPPFLAGS)
 
 efidevpathtest_LDADD = \
-	libefidevpath.la
+	libefidevpath.la \
+	$(CMOCKA_LIBS)
 
 ###############################################################################
 #

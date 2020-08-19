@@ -18,6 +18,7 @@ AM_INIT_AUTOMAKE([foreign subdir-objects tar-ustar])
 
 # Check for libraries
 PKG_CHECK_MODULES(GLIB, glib-2.0)
+PKG_CHECK_MODULES(CMOCKA, cmocka)
 
 # Checks
 AC_CHECK_HEADERS([])
