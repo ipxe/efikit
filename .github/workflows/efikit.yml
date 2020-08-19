@@ -27,22 +27,29 @@ jobs:
         uses: actions/upload-artifact@v2
         if: failure()
         with:
-          name: failed
+          name: linux-failure
           path: |
             .
             !src/edk2
       - name: Distribution
         run: |
           make distcheck
+      - name: Upload
+        uses: actions/upload-artifact@v2
+        with:
+          name: dist
+          path: efikit-*.tar.gz
+          if-no-files-found: error
 
   mingw:
     name: MinGW
+    needs: linux
     runs-on: ubuntu-latest
     container: fedora
     steps:
       - name: Install packages
         run: |
-          dnf install -y git make libtool gettext-devel \
+          dnf install -y make libtool gettext-devel \
             mingw64-gcc mingw64-win-iconv mingw64-glib2 mingw64-cmocka \
             wine-common wine-systemd
       - name: Configure environment
@@ -57,13 +64,15 @@ jobs:
           QQMINGWPATH=$(printf '%q' ${QMINGWPATH})
           sed -i "s/^\(\"PATH\"=.*\)\"$/\1;${QQMINGWPATH}\"/" \
             ~/.wine/system.reg
-      - name: Check out code
-        uses: actions/checkout@v2
+      - name: Download
+        uses: actions/download-artifact@v2
         with:
-          submodules: true
+          name: dist
+      - name: Unpack
+        run: |
+          tar --strip-components=1 -xvf efikit-*.tar.gz
       - name: Build
         run: |
-          ./autogen.sh
           ./configure --build= --host=x86_64-w64-mingw32
           make
           wine ./src/efidevpath.exe -h
@@ -71,7 +80,5 @@ jobs:
         uses: actions/upload-artifact@v2
         if: failure()
         with:
-          name: failed
-          path: |
-            .
-            !src/edk2
+          name: mingw-failure
+          path: .
