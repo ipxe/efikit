@@ -95,7 +95,7 @@ static void * convert_string ( const char *in, size_t inlen,
  */
 CHAR16 * utf8_to_efi ( const char *utf8 ) {
 	size_t len = ( strlen ( utf8 ) + 1 /* NUL */ );
-	return convert_string ( utf8, len, "UTF8", "UCS-2LE" );
+	return convert_string ( utf8, len, "UTF-8", "UCS-2LE" );
 }
 
 /**
@@ -109,5 +109,5 @@ CHAR16 * utf8_to_efi ( const char *utf8 ) {
  */
 char * efi_to_utf8 ( const CHAR16 *efi ) {
 	size_t len = ( ( StrLen ( efi ) + 1 /* wNUL */ ) * sizeof ( efi[0] ) );
-	return convert_string ( ( ( char * ) efi ), len, "UCS-2LE", "UTF8" );
+	return convert_string ( ( ( char * ) efi ), len, "UCS-2LE", "UTF-8" );
 }
