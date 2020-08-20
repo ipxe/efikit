@@ -82,3 +82,38 @@ jobs:
         with:
           name: mingw-failure
           path: .
+
+  windows:
+    name: Windows
+    needs: linux
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - name: Install packages
+        uses: msys2/setup-msys2@v2
+        with:
+          install: >
+            base-devel
+            mingw-w64-x86_64-toolchain
+            mingw-w64-x86_64-glib2
+            mingw-w64-x86_64-cmocka
+      - name: Download
+        uses: actions/download-artifact@v2
+        with:
+          name: dist
+      - name: Unpack
+        run: |
+          tar --strip-components=1 -xvf efikit-*.tar.gz
+      - name: Build
+        run: |
+          ./configure
+          make
+          make check
+      - name: Upload failure artifacts
+        uses: actions/upload-artifact@v2
+        if: failure()
+        with:
+          name: windows-failure
+          path: .
