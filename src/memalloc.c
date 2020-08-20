@@ -83,6 +83,8 @@ VOID EFIAPI FreePages ( IN VOID *Buffer, IN UINTN Pages ) {
 }
 
 VOID * EFIAPI AllocateAlignedPages ( IN UINTN Pages, IN UINTN Alignment ) {
+	if ( Pages > ( MAX_UINTN / EFI_PAGE_SIZE ) )
+		return NULL;
 	return PlatformAllocate ( Pages * EFI_PAGE_SIZE, Alignment );
 }
 
