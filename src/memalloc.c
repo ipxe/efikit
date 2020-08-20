@@ -18,14 +18,30 @@
 
 /*****************************************************************************
  *
- * Platform memory allocation helper functions
+ * Unaligned memory allocation helper functions
+ *
+ *****************************************************************************
+ */
+
+STATIC VOID * PlatformAllocate ( IN UINTN AllocationSize ) {
+	return malloc ( AllocationSize );
+}
+
+STATIC VOID PlatformFree ( IN VOID *Buffer ) {
+	free ( Buffer );
+}
+
+/*****************************************************************************
+ *
+ * Aligned memory allocation helper functions
  *
  *****************************************************************************
  */
 
 #if HAVE_DECL_POSIX_MEMALIGN
 
-STATIC VOID * PlatformAllocate ( IN UINTN AllocationSize, IN UINTN Alignment ) {
+STATIC VOID * PlatformAllocateAligned ( IN UINTN AllocationSize,
+					IN UINTN Alignment ) {
 	VOID *Buffer;
 
 	if ( Alignment < sizeof ( void * ) )
@@ -35,26 +51,27 @@ STATIC VOID * PlatformAllocate ( IN UINTN AllocationSize, IN UINTN Alignment ) {
 	return Buffer;
 }
 
-STATIC VOID PlatformFree ( IN VOID *Buffer ) {
+STATIC VOID PlatformFreeAligned ( IN VOID *Buffer ) {
 	free ( Buffer );
 }
 
 #elif HAVE_DECL__ALIGNED_MALLOC
 
-STATIC VOID * PlatformAllocate ( IN UINTN AllocationSize, IN UINTN Alignment ) {
+STATIC VOID * PlatformAllocateAligned ( IN UINTN AllocationSize,
+					IN UINTN Alignment ) {
 
 	if ( Alignment < sizeof ( void * ) )
 		Alignment = sizeof ( void * );
 	return _aligned_malloc ( AllocationSize, Alignment );
 }
 
-STATIC VOID PlatformFree ( IN VOID *Buffer ) {
+STATIC VOID PlatformFreeAligned ( IN VOID *Buffer ) {
 	_aligned_free ( Buffer );
 }
 
 #else
 
-#error "No platform memory allocation found found"
+#error "No aligned memory allocation mechanism found"
 
 #endif
 
@@ -85,7 +102,7 @@ VOID EFIAPI FreePages ( IN VOID *Buffer, IN UINTN Pages ) {
 VOID * EFIAPI AllocateAlignedPages ( IN UINTN Pages, IN UINTN Alignment ) {
 	if ( Pages > ( MAX_UINTN / EFI_PAGE_SIZE ) )
 		return NULL;
-	return PlatformAllocate ( Pages * EFI_PAGE_SIZE, Alignment );
+	return PlatformAllocateAligned ( Pages * EFI_PAGE_SIZE, Alignment );
 }
 
 VOID * EFIAPI AllocateAlignedRuntimePages ( IN UINTN Pages,
@@ -99,12 +116,12 @@ VOID * EFIAPI AllocateAlignedReservedPages ( IN UINTN Pages,
 }
 
 VOID EFIAPI FreeAlignedPages ( IN VOID *Buffer, IN UINTN Pages ) {
-	PlatformFree ( Buffer );
+	PlatformFreeAligned ( Buffer );
 	( VOID ) Pages;
 }
 
 VOID * EFIAPI AllocatePool ( IN UINTN AllocationSize ) {
-	return PlatformAllocate ( AllocationSize, 0 );
+	return PlatformAllocate ( AllocationSize );
 }
 
 VOID * EFIAPI AllocateRuntimePool ( IN UINTN AllocationSize ) {
