@@ -22,7 +22,6 @@ PKG_CHECK_MODULES(CMOCKA, cmocka)
 
 # Checks
 AC_CHECK_HEADERS([])
-AC_FUNC_MALLOC
 AC_CHECK_FUNCS([])
 AC_CHECK_DECLS([posix_memalign], [], [], [[#include <stdlib.h>]])
 AC_CHECK_DECLS([_aligned_malloc], [], [], [[#include <malloc.h>]])
