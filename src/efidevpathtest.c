@@ -15,138 +15,6 @@
 
 #include "efidevpathtest.h"
 
-/** Construct device path protocol header */
-#define DPHDR( type, subtype, length ) {				\
-		.Type = (type),						\
-		.SubType = (subtype),					\
-		.Length = { (length) & 0xff, (length) >> 8 },		\
-	}
-
-/** End device path */
-#define DPEND DPHDR ( END_DEVICE_PATH_TYPE, END_ENTIRE_DEVICE_PATH_SUBTYPE, \
-		      sizeof ( EFI_DEVICE_PATH_PROTOCOL ) )
-
-/** PCI root ACPI HID */
-#define HID_PCIROOT EISA_PNP_ID ( 0x0a03 )
-
-/** Sample hard disk device path text */
-static const char *hddpath_text =
-	"PciRoot(0x0)/Pci(0x1,0x1)/Ata(0x0)";
-
-/** Sample hard disk device path */
-static const struct {
-	ACPI_HID_DEVICE_PATH pciroot;
-	PCI_DEVICE_PATH pci;
-	ATAPI_DEVICE_PATH atapi;
-	EFI_DEVICE_PATH_PROTOCOL end;
-} __attribute__ (( packed )) hddpath = {
-	.pciroot = {
-		.Header = DPHDR ( ACPI_DEVICE_PATH, ACPI_DP,
-				  sizeof ( hddpath.pciroot ) ),
-		.HID = HID_PCIROOT,
-	},
-	.pci = {
-		.Header = DPHDR ( HARDWARE_DEVICE_PATH, HW_PCI_DP,
-				  sizeof ( hddpath.pci ) ),
-		.Function = 0x1,
-		.Device = 0x1,
-	},
-	.atapi = {
-		.Header = DPHDR ( MESSAGING_DEVICE_PATH, MSG_ATAPI_DP,
-				  sizeof ( hddpath.atapi ) ),
-	},
-	.end = DPEND,
-};
-
-/** Sample MAC device path text */
-static const char *macpath_text =
-	"PciRoot(0x0)/Pci(0x3,0x0)/MAC(525400123456,0x1)";
-
-/** Sample MAC device path */
-static const struct {
-	ACPI_HID_DEVICE_PATH pciroot;
-	PCI_DEVICE_PATH pci;
-	MAC_ADDR_DEVICE_PATH mac;
-	EFI_DEVICE_PATH_PROTOCOL end;
-} __attribute__ (( packed )) macpath = {
-	.pciroot = {
-		.Header = DPHDR ( ACPI_DEVICE_PATH, ACPI_DP,
-				  sizeof ( macpath.pciroot ) ),
-		.HID = HID_PCIROOT,
-	},
-	.pci = {
-		.Header = DPHDR ( HARDWARE_DEVICE_PATH, HW_PCI_DP,
-				  sizeof ( macpath.pci ) ),
-		.Function = 0x0,
-		.Device = 0x3,
-	},
-	.mac = {
-		.Header = DPHDR ( MESSAGING_DEVICE_PATH, MSG_MAC_ADDR_DP,
-				  sizeof ( macpath.mac ) ),
-		.MacAddress = { { 0x52, 0x54, 0x00, 0x12, 0x34, 0x56, } },
-		.IfType = 0x01,
-	},
-	.end = DPEND,
-};
-
-/** Sample URI device path text */
-static const char *uripath_text =
-	"PciRoot(0x0)/Pci(0x1C,0x2)/Pci(0x0,0x1)/MAC(525400AC9C41,0x1)/"
-	"IPv4(0.0.0.0)/Uri(http://boot.ipxe.org/ipxe.efi)";
-
-/** Sample URI device path text (unshortened) */
-static const char *uripath_text_long =
-	"PciRoot(0x0)/Pci(0x1C,0x2)/Pci(0x0,0x1)/MAC(525400AC9C41,0x1)/"
-	"IPv4(0.0.0.0,0x0,DHCP,0.0.0.0,0.0.0.0,0.0.0.0)/"
-	"Uri(http://boot.ipxe.org/ipxe.efi)";
-
-/** Sample URI device path */
-static const struct {
-	ACPI_HID_DEVICE_PATH pciroot;
-	PCI_DEVICE_PATH pci1;
-	PCI_DEVICE_PATH pci2;
-	MAC_ADDR_DEVICE_PATH mac;
-	IPv4_DEVICE_PATH ipv4;
-	URI_DEVICE_PATH uri;
-	char uri_text[29];
-	EFI_DEVICE_PATH_PROTOCOL end;
-} __attribute__ (( packed )) uripath = {
-	.pciroot = {
-		.Header = DPHDR ( ACPI_DEVICE_PATH, ACPI_DP,
-				  sizeof ( uripath.pciroot ) ),
-		.HID = HID_PCIROOT,
-	},
-	.pci1 = {
-		.Header = DPHDR ( HARDWARE_DEVICE_PATH, HW_PCI_DP,
-				  sizeof ( uripath.pci1 ) ),
-		.Function = 0x2,
-		.Device = 0x1c,
-	},
-	.pci2 = {
-		.Header = DPHDR ( HARDWARE_DEVICE_PATH, HW_PCI_DP,
-				  sizeof ( uripath.pci2 ) ),
-		.Function = 0x1,
-		.Device = 0x0,
-	},
-	.mac = {
-		.Header = DPHDR ( MESSAGING_DEVICE_PATH, MSG_MAC_ADDR_DP,
-				  sizeof ( uripath.mac ) ),
-		.MacAddress = { { 0x52, 0x54, 0x00, 0xac, 0x9c, 0x41, } },
-		.IfType = 0x01,
-	},
-	.ipv4 = {
-		.Header = DPHDR ( MESSAGING_DEVICE_PATH, MSG_IPv4_DP,
-				  sizeof ( uripath.ipv4 ) ),
-	},
-	.uri = {
-		.Header = DPHDR ( MESSAGING_DEVICE_PATH, MSG_URI_DP,
-				  ( sizeof ( uripath.uri ) +
-				    sizeof ( uripath.uri_text ) ) ),
-	},
-	.uri_text = "http://boot.ipxe.org/ipxe.efi",
-	.end = DPEND,
-};
-
 /**
  * Test conversion from device path to text
  *
@@ -214,23 +82,73 @@ static void assert_to_from_text ( const EFI_DEVICE_PATH_PROTOCOL *path,
 
 /** Test hard disk device path */
 void test_hddpath ( void **state ) {
+	static const char *text = "PciRoot(0x0)/Pci(0x1,0x1)/Ata(0x0)";
+	static const struct {
+		ACPI_HID_DEVICE_PATH pciroot;
+		PCI_DEVICE_PATH pci;
+		ATAPI_DEVICE_PATH atapi;
+		EFI_DEVICE_PATH_PROTOCOL end;
+	} __attribute__ (( packed )) path = {
+		.pciroot = EFIDP_PCIROOT ( 0x0 ),
+		.pci = EFIDP_PCI ( 0x01, 0x1 ),
+		.atapi = EFIDP_ATA ( 0, 0, 0 ),
+		.end = EFIDP_END,
+	};
+
 	( void ) state;
-	assert_to_from_text ( &hddpath.pciroot.Header, true, true,
-			      hddpath_text );
+	assert_to_from_text ( &path.pciroot.Header, true, true, text );
 }
 
 /** Test MAC device path */
 void test_macpath ( void **state ) {
+	static const char *text =
+		"PciRoot(0x0)/Pci(0x3,0x0)/MAC(525400123456,0x1)";
+	static const struct {
+		ACPI_HID_DEVICE_PATH pciroot;
+		PCI_DEVICE_PATH pci;
+		MAC_ADDR_DEVICE_PATH mac;
+		EFI_DEVICE_PATH_PROTOCOL end;
+	} __attribute__ (( packed )) path = {
+		.pciroot = EFIDP_PCIROOT ( 0 ),
+		.pci = EFIDP_PCI ( 0x03, 0x0 ),
+		.mac = EFIDP_MAC ( ( 0x52, 0x54, 0x00, 0x12, 0x34, 0x56 ), 1 ),
+		.end = EFIDP_END,
+	};
+
 	( void ) state;
-	assert_to_from_text ( &macpath.pciroot.Header, false, false,
-			      macpath_text );
+	assert_to_from_text ( &path.pciroot.Header, false, false, text );
 }
 
 /** Test URI device path */
 void test_uripath ( void **state ) {
+	static const char *text =
+		"PciRoot(0x0)/Pci(0x1C,0x2)/Pci(0x0,0x1)/MAC(525400AC9C41,0x1)/"
+		"IPv4(0.0.0.0)/Uri(http://boot.ipxe.org/ipxe.efi)";
+	static const char *text_long =
+		"PciRoot(0x0)/Pci(0x1C,0x2)/Pci(0x0,0x1)/MAC(525400AC9C41,0x1)/"
+		"IPv4(0.0.0.0,0x0,DHCP,0.0.0.0,0.0.0.0,0.0.0.0)/"
+		"Uri(http://boot.ipxe.org/ipxe.efi)";
+	static const struct {
+		ACPI_HID_DEVICE_PATH pciroot;
+		PCI_DEVICE_PATH pci1;
+		PCI_DEVICE_PATH pci2;
+		MAC_ADDR_DEVICE_PATH mac;
+		IPv4_DEVICE_PATH ipv4;
+		URI_DEVICE_PATH uri;
+		char uri_text[29];
+		EFI_DEVICE_PATH_PROTOCOL end;
+	} __attribute__ (( packed )) path = {
+		.pciroot = EFIDP_PCIROOT ( 0 ),
+		.pci1 = EFIDP_PCI ( 0x1c, 0x2 ),
+		.pci2 = EFIDP_PCI ( 0x00, 0x1 ),
+		.mac = EFIDP_MAC ( ( 0x52, 0x54, 0x00, 0xac, 0x9c, 0x41 ), 1 ),
+		.ipv4 = EFIDP_IPv4_AUTO,
+		.uri = EFIDP_URI_HDR ( sizeof ( path.uri_text ) ),
+		.uri_text = "http://boot.ipxe.org/ipxe.efi",
+		.end = EFIDP_END,
+	};
+
 	( void ) state;
-	assert_to_from_text ( &uripath.pciroot.Header, true, true,
-			      uripath_text );
-	assert_to_from_text ( &uripath.pciroot.Header, false, false,
-			      uripath_text_long );
+	assert_to_from_text ( &path.pciroot.Header, true, true, text );
+	assert_to_from_text ( &path.pciroot.Header, false, false, text_long );
 }
