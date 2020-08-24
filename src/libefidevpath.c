@@ -64,6 +64,9 @@ size_t efidp_len ( const EFI_DEVICE_PATH_PROTOCOL *path ) {
  *
  * @v text		Textual representation (in UTF-8)
  * @ret path		EFI device path, or NULL on error
+ *
+ * The device path is allocated using malloc() and must eventually be
+ * freed by the caller.
  */
 EFI_DEVICE_PATH_PROTOCOL * efidp_from_text ( const char *text ) {
 	CHAR16 *efitext;
@@ -98,6 +101,9 @@ EFI_DEVICE_PATH_PROTOCOL * efidp_from_text ( const char *text ) {
  * @v display_only	Use shorter text representation of the display node
  * @v allow_shortcuts	Use shortcut forms of text representation
  * @ret text		Textual representation
+ *
+ * The textual representation is allocated using malloc() and must
+ * eventually be freed by the caller.
  *
  * The UEFI specification is remarkably vague on the difference
  * between @c display_only and @c allow_shortcuts.
