@@ -29,6 +29,11 @@ check_PROGRAMS = \
 
 TESTS = $(check_PROGRAMS)
 
+LOG_DRIVER = \
+	env AM_TAP_AWK='$(AWK)' $(SHELL) $(top_srcdir)/build-aux/tap-driver.sh
+
+export CMOCKA_MESSAGE_OUTPUT=TAP
+
 ###############################################################################
 #
 # EFI device path library and command-line tool
