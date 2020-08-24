@@ -108,6 +108,6 @@ CHAR16 * utf8_to_efi ( const char *utf8 ) {
  * be freed by the caller.
  */
 char * efi_to_utf8 ( const CHAR16 *efi ) {
-	size_t len = ( ( StrLen ( efi ) + 1 /* wNUL */ ) * sizeof ( efi[0] ) );
+	size_t len = StrSize ( efi );
 	return convert_string ( ( ( char * ) efi ), len, "UCS-2LE", "UTF-8" );
 }
