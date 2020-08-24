@@ -13,6 +13,8 @@
 #include <cmocka.h>
 #include <efidevpath.h>
 
+#include "efidevpathtest.h"
+
 /** Construct device path protocol header */
 #define DPHDR( type, subtype, length ) {				\
 		.Type = (type),						\
@@ -211,40 +213,24 @@ static void assert_to_from_text ( const EFI_DEVICE_PATH_PROTOCOL *path,
 }
 
 /** Test hard disk device path */
-static void test_hddpath ( void **state ) {
+void test_hddpath ( void **state ) {
 	( void ) state;
 	assert_to_from_text ( &hddpath.pciroot.Header, true, true,
 			      hddpath_text );
 }
 
 /** Test MAC device path */
-static void test_macpath ( void **state ) {
+void test_macpath ( void **state ) {
 	( void ) state;
 	assert_to_from_text ( &macpath.pciroot.Header, false, false,
 			      macpath_text );
 }
 
 /** Test URI device path */
-static void test_uripath ( void **state ) {
+void test_uripath ( void **state ) {
 	( void ) state;
 	assert_to_from_text ( &uripath.pciroot.Header, true, true,
 			      uripath_text );
 	assert_to_from_text ( &uripath.pciroot.Header, false, false,
 			      uripath_text_long );
-}
-
-/** Tests */
-static const struct CMUnitTest tests[] = {
-	cmocka_unit_test ( test_hddpath ),
-	cmocka_unit_test ( test_macpath ),
-	cmocka_unit_test ( test_uripath ),
-};
-
-/**
- * Main entry point
- *
- * @ret exit		Exit status
- */
-int main ( void ) {
-	return cmocka_run_group_tests ( tests, NULL, NULL );
 }

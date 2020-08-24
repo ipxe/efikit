@@ -14,7 +14,7 @@ bin_PROGRAMS = \
 	efidevpath
 
 lib_LTLIBRARIES = \
-	libefidevpath.la
+	libefikit.la
 
 noinst_LTLIBRARIES = \
 	libcommon.la \
@@ -25,7 +25,7 @@ noinst_LTLIBRARIES = \
 	libmdeuefidevicepath.la
 
 check_PROGRAMS = \
-	efidevpathtest
+	efikittest
 
 TESTS = $(check_PROGRAMS)
 
@@ -36,18 +36,18 @@ export CMOCKA_MESSAGE_OUTPUT=TAP
 
 ###############################################################################
 #
-# EFI device path library and command-line tool
+# EFI kit library
 #
 ###############################################################################
 
-libefidevpath_la_SOURCES = \
+libefikit_la_SOURCES = \
 	libefidevpath.c
 
-libefidevpath_la_LDFLAGS = \
+libefikit_la_LDFLAGS = \
 	-export-symbols-regex '^efidp_' \
 	$(AM_LDFLAGS)
 
-libefidevpath_la_LIBADD = \
+libefikit_la_LIBADD = \
 	libcommon.la \
 	libmdebase.la \
 	libmdebasedebugnull.la \
@@ -55,6 +55,25 @@ libefidevpath_la_LIBADD = \
 	libmdebaseprint.la \
 	libmdeuefidevicepath.la \
 	$(LTLIBICONV)
+
+efikittest_SOURCES = \
+	efikittest.c \
+	efidevpathtest.c \
+	efidevpathtest.h
+
+efikittest_CPPFLAGS = \
+	$(CMOCKA_CFLAGS) \
+	$(AM_CPPFLAGS)
+
+efikittest_LDADD = \
+	libefikit.la \
+	$(CMOCKA_LIBS)
+
+###############################################################################
+#
+# EFI device path command-line tool
+#
+###############################################################################
 
 efidevpath_SOURCES = \
 	efidevpath.c
@@ -64,19 +83,8 @@ efidevpath_CPPFLAGS = \
 	$(AM_CPPFLAGS)
 
 efidevpath_LDADD = \
-	libefidevpath.la \
+	libefikit.la \
 	$(GLIB_LIBS)
-
-efidevpathtest_SOURCES = \
-	efidevpathtest.c
-
-efidevpathtest_CPPFLAGS = \
-	$(CMOCKA_CFLAGS) \
-	$(AM_CPPFLAGS)
-
-efidevpathtest_LDADD = \
-	libefidevpath.la \
-	$(CMOCKA_LIBS)
 
 ###############################################################################
 #
