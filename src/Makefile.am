@@ -41,10 +41,11 @@ export CMOCKA_MESSAGE_OUTPUT=TAP
 ###############################################################################
 
 libefikit_la_SOURCES = \
-	libefidevpath.c
+	libefidevpath.c \
+	libefibootdev.c
 
 libefikit_la_LDFLAGS = \
-	-export-symbols-regex '^efidp_' \
+	-export-symbols-regex '^(efidp|efiboot)_' \
 	$(AM_LDFLAGS)
 
 libefikit_la_LIBADD = \
@@ -58,12 +59,18 @@ libefikit_la_LIBADD = \
 
 efikittest_SOURCES = \
 	efikittest.c \
+	efibootdevtest.c \
+	efibootdevtest.h \
 	efidevpathtest.c \
 	efidevpathtest.h
 
 efikittest_CPPFLAGS = \
 	$(CMOCKA_CFLAGS) \
 	$(AM_CPPFLAGS)
+
+efikittest_CFLAGS = \
+	-fshort-wchar \
+	$(AM_CFLAGS)
 
 efikittest_LDADD = \
 	libefikit.la \

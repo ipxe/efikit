@@ -13,12 +13,15 @@
 #include <cmocka.h>
 
 #include "efidevpathtest.h"
+#include "efibootdevtest.h"
 
 /** Tests */
 static const struct CMUnitTest tests[] = {
 	cmocka_unit_test ( test_hddpath ),
 	cmocka_unit_test ( test_macpath ),
 	cmocka_unit_test ( test_uripath ),
+	cmocka_unit_test ( test_hddopt ),
+	cmocka_unit_test ( test_badopt ),
 };
 
 /**

@@ -553,4 +553,5 @@ nobase_efikit_HEADERS = \
 	edk2/MdePkg/Include/Uefi/UefiPxe.h \
 	edk2/MdePkg/Include/Uefi/UefiSpec.h \
 	edk2/MdePkg/Include/X64/ProcessorBind.h \
+	efibootdev.h \
 	efidevpath.h

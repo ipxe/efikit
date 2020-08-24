@@ -23,9 +23,9 @@
  * @v allow_shortcuts	Use shortcut forms of text representation
  * @v expected		Expected text
  */
-static void assert_to_text ( const EFI_DEVICE_PATH_PROTOCOL *path,
-			     bool display_only, bool allow_shortcuts,
-			     const char *expected ) {
+void assert_efidp_to_text ( const EFI_DEVICE_PATH_PROTOCOL *path,
+			    bool display_only, bool allow_shortcuts,
+			    const char *expected ) {
 	char *text;
 
 	/* Convert device path to text */
@@ -45,8 +45,8 @@ static void assert_to_text ( const EFI_DEVICE_PATH_PROTOCOL *path,
  * @v text		Text
  * @v expected		Expected device path
  */
-static void assert_from_text ( const char *text,
-			       const EFI_DEVICE_PATH_PROTOCOL *expected ) {
+void assert_efidp_from_text ( const char *text,
+			      const EFI_DEVICE_PATH_PROTOCOL *expected ) {
 	EFI_DEVICE_PATH_PROTOCOL *path;
 	size_t len;
 
@@ -73,11 +73,11 @@ static void assert_from_text ( const char *text,
  * @v allow_shortcuts	Use shortcut forms of text representation
  * @v text		Device path text
  */
-static void assert_to_from_text ( const EFI_DEVICE_PATH_PROTOCOL *path,
-				  bool display_only, bool allow_shortcuts,
-				  const char *text ) {
-	assert_to_text ( path, display_only, allow_shortcuts, text );
-	assert_from_text ( text, path );
+void assert_efidp_text ( const EFI_DEVICE_PATH_PROTOCOL *path,
+			 bool display_only, bool allow_shortcuts,
+			 const char *text ) {
+	assert_efidp_to_text ( path, display_only, allow_shortcuts, text );
+	assert_efidp_from_text ( text, path );
 }
 
 /** Test hard disk device path */
@@ -96,7 +96,7 @@ void test_hddpath ( void **state ) {
 	};
 
 	( void ) state;
-	assert_to_from_text ( &path.pciroot.Header, true, true, text );
+	assert_efidp_text ( &path.pciroot.Header, true, true, text );
 }
 
 /** Test MAC device path */
@@ -116,7 +116,7 @@ void test_macpath ( void **state ) {
 	};
 
 	( void ) state;
-	assert_to_from_text ( &path.pciroot.Header, false, false, text );
+	assert_efidp_text ( &path.pciroot.Header, false, false, text );
 }
 
 /** Test URI device path */
@@ -149,6 +149,6 @@ void test_uripath ( void **state ) {
 	};
 
 	( void ) state;
-	assert_to_from_text ( &path.pciroot.Header, true, true, text );
-	assert_to_from_text ( &path.pciroot.Header, false, false, text_long );
+	assert_efidp_text ( &path.pciroot.Header, true, true, text );
+	assert_efidp_text ( &path.pciroot.Header, false, false, text_long );
 }
