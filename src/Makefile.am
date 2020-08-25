@@ -168,8 +168,8 @@ libmdebasedebugnull_la_SOURCES = \
 	edk2/MdePkg/Library/BaseDebugLibNull/DebugLib.c
 
 libmdebasedebugnull_la_CFLAGS = \
-	-Wno-unused-parameter \
-	$(AM_CFLAGS)
+	$(AM_CFLAGS) \
+	-Wno-unused-parameter
 
 ###############################################################################
 #
@@ -208,10 +208,10 @@ libmdebaseprint_la_SOURCES = \
 	edk2/MdePkg/Library/BasePrintLib/PrintLibInternal.h
 
 libmdebaseprint_la_CFLAGS = \
-	-Wno-implicit-fallthrough \
 	-D_PCD_GET_MODE_32_PcdMaximumAsciiStringLength=1000000 \
 	-D_PCD_GET_MODE_32_PcdMaximumUnicodeStringLength=1000000 \
-	$(AM_CFLAGS)
+	$(AM_CFLAGS) \
+	-Wno-implicit-fallthrough
 
 ###############################################################################
 #
@@ -228,6 +228,6 @@ libmdeuefidevicepath_la_SOURCES = \
 
 libmdeuefidevicepath_la_CFLAGS = \
 	-fshort-wchar \
-	-Wno-unused-parameter \
 	-D_PCD_GET_MODE_32_PcdMaximumDevicePathNodeCount=1000000 \
-	$(AM_CFLAGS)
+	$(AM_CFLAGS) \
+	-Wno-unused-parameter
