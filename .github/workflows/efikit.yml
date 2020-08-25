@@ -12,7 +12,7 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y -o Acquire::Retries=50 \
-            gettext libcmocka-dev
+            autoconf-archive gettext libcmocka-dev
       - name: Check out code
         uses: actions/checkout@v2
         with:
