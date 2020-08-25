@@ -24,5 +24,6 @@ extern void test_hddpath ( void **state );
 extern void test_macpath ( void **state );
 extern void test_uripath ( void **state );
 extern void test_fvfilepath ( void **state );
+extern void test_hddfilepath ( void **state );
 
 #endif /* _EFIDEVPATHTEST_H */

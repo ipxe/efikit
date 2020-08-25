@@ -82,6 +82,26 @@ extern "C" {
 			      sizeof ( URI_DEVICE_PATH ) + (len) ),	\
 	}
 
+/** Wrap HD signature bytes for inclusion in EFIDP_HD_GPT() */
+#define EFIDP_HD_SIG(...) { __VA_ARGS__ }
+
+/** Construct HD(partition, GPT, start, size, signature) device path */
+#define EFIDP_HD_GPT( partition, start, size, signature ) {		\
+	.Header = EFIDP_HDR ( MEDIA_DEVICE_PATH, MEDIA_HARDDRIVE_DP,	\
+			      sizeof ( HARDDRIVE_DEVICE_PATH ) ),	\
+	.PartitionNumber = (partition),					\
+	.PartitionStart = (start),					\
+	.PartitionSize = (size),					\
+	.Signature = EFIDP_HD_SIG signature,				\
+	.MBRType = MBR_TYPE_EFI_PARTITION_TABLE_HEADER,			\
+	.SignatureType = SIGNATURE_TYPE_GUID,				\
+	}
+
+/** Construct file device path header */
+#define EFIDP_FILE_HDR( len )						\
+	EFIDP_HDR ( MEDIA_DEVICE_PATH, MEDIA_FILEPATH_DP,		\
+		    ( SIZE_OF_FILEPATH_DEVICE_PATH + (len) ) )
+
 /** Construct FvFile(guid) device path */
 #define EFIDP_FVFILE( guid ) {						\
 	.Header = EFIDP_HDR ( MEDIA_DEVICE_PATH, MEDIA_PIWG_FW_FILE_DP,	\
