@@ -7,10 +7,9 @@ AM_CPPFLAGS = \
 
 AM_CFLAGS = \
 	-W -Wall -Wextra -Werror \
-	-ffunction-sections -fdata-sections -fno-asynchronous-unwind-tables \
-	-Wl,--gc-sections
+	-ffunction-sections -fdata-sections -fno-asynchronous-unwind-tables
 
-AM_LDFLAGS = -no-undefined
+AM_LDFLAGS = -no-undefined -Wl,--gc-sections
 
 bin_PROGRAMS = \
 	efidevpath
