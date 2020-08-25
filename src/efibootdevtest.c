@@ -91,6 +91,9 @@ static void assert_efiboot_to_option ( const struct efi_boot_entry_test *test,
 	assert_int_equal ( len, expected_len );
 	assert_memory_equal ( expected, option, len );
 
+	/* Free load option */
+	free ( option );
+
 	/* Free boot entry */
 	efiboot_free ( entry );
 
