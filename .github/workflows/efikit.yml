@@ -4,8 +4,8 @@ on: [push]
 
 jobs:
 
-  linux:
-    name: Linux
+  base:
+    name: Linux GCC
     runs-on: ubuntu-latest
     steps:
       - name: Install packages
@@ -28,7 +28,7 @@ jobs:
         uses: actions/upload-artifact@v2
         if: failure()
         with:
-          name: linux-failure
+          name: base-failure
           path: |
             .
             !src/edk2
@@ -42,9 +42,39 @@ jobs:
           path: efikit-*.tar.gz
           if-no-files-found: error
 
+  clang:
+    name: Clang
+    needs: base
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install packages
+        run: |
+          sudo apt update
+          sudo apt install -y -o Acquire::Retries=50 \
+            valgrind gettext libcmocka-dev
+      - name: Download
+        uses: actions/download-artifact@v2
+        with:
+          name: dist
+      - name: Unpack
+        run: |
+          tar --strip-components=1 -xvf efikit-*.tar.gz
+      - name: Build
+        run: |
+          ./configure CC=clang
+          make
+          make check
+          make check-valgrind
+      - name: Upload failure artifacts
+        uses: actions/upload-artifact@v2
+        if: failure()
+        with:
+          name: clang-failure
+          path: .
+
   mingw:
     name: MinGW
-    needs: linux
+    needs: base
     runs-on: ubuntu-latest
     container: fedora
     steps:
@@ -86,7 +116,7 @@ jobs:
 
   windows:
     name: Windows
-    needs: linux
+    needs: base
     runs-on: windows-latest
     defaults:
       run:
