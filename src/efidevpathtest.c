@@ -144,7 +144,7 @@ void test_uripath ( void **state ) {
 		PCI_DEVICE_PATH pci2;
 		MAC_ADDR_DEVICE_PATH mac;
 		IPv4_DEVICE_PATH ipv4;
-		URI_DEVICE_PATH uri;
+		EFI_DEVICE_PATH_PROTOCOL uri;
 		char uri_text[29];
 		EFI_DEVICE_PATH_PROTOCOL end;
 	} __attribute__ (( packed )) path = {

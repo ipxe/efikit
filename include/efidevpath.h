@@ -77,10 +77,9 @@ extern "C" {
 	}
 
 /** Construct Uri(...) device path header */
-#define EFIDP_URI_HDR( len ) {						\
-	.Header = EFIDP_HDR ( MESSAGING_DEVICE_PATH, MSG_URI_DP,	\
-			      sizeof ( URI_DEVICE_PATH ) + (len) ),	\
-	}
+#define EFIDP_URI_HDR( len )						\
+	EFIDP_HDR ( MESSAGING_DEVICE_PATH, MSG_URI_DP,			\
+		    sizeof ( EFI_DEVICE_PATH_PROTOCOL ) + (len) )
 
 /** Wrap HD signature bytes for inclusion in EFIDP_HD_GPT() */
 #define EFIDP_HD_SIG(...) { __VA_ARGS__ }
