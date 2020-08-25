@@ -28,6 +28,11 @@ AC_CHECK_DECLS([posix_memalign], [], [], [[#include <stdlib.h>]])
 AC_CHECK_DECLS([_aligned_malloc], [], [], [[#include <malloc.h>]])
 AM_ICONV
 
+# Linker flags
+AX_CHECK_LINK_FLAG([-Wl,--gc-sections],
+		   [AX_APPEND_FLAG([-Wl,--gc-sections], [LDFLAGS])],
+		   [AX_APPEND_FLAG([-Wl,-dead_strip], [LDFLAGS])])
+
 # Configure tests
 AX_VALGRIND_DFLT([sgcheck], [off])
 AX_VALGRIND_CHECK

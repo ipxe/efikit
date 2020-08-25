@@ -148,3 +148,30 @@ jobs:
         with:
           name: windows-failure
           path: .
+
+  macos:
+    name: MacOS
+    needs: base
+    runs-on: macos-latest
+    steps:
+      - name: Install packages
+        run: |
+          brew install cmocka gettext glib pkg-config
+      - name: Download
+        uses: actions/download-artifact@v2
+        with:
+          name: dist
+      - name: Unpack
+        run: |
+          tar --strip-components=1 -xvf efikit-*.tar.gz
+      - name: Build
+        run: |
+          ./configure
+          make
+          make check
+      - name: Upload failure artifacts
+        uses: actions/upload-artifact@v2
+        if: failure()
+        with:
+          name: macos-failure
+          path: .
