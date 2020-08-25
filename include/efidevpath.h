@@ -82,6 +82,20 @@ extern "C" {
 			      sizeof ( URI_DEVICE_PATH ) + (len) ),	\
 	}
 
+/** Construct FvFile(guid) device path */
+#define EFIDP_FVFILE( guid ) {						\
+	.Header = EFIDP_HDR ( MEDIA_DEVICE_PATH, MEDIA_PIWG_FW_FILE_DP,	\
+			      sizeof ( MEDIA_FW_VOL_FILEPATH_DEVICE_PATH ) ), \
+	.FvFileName = guid,						\
+	}
+
+/** Construct Fv(guid) device path */
+#define EFIDP_FV( guid ) {						\
+	.Header = EFIDP_HDR ( MEDIA_DEVICE_PATH, MEDIA_PIWG_FW_VOL_DP,	\
+			      sizeof ( MEDIA_FW_VOL_DEVICE_PATH ) ),	\
+	.FvName = guid,							\
+	}
+
 extern bool efidp_valid ( const void *path, size_t max_len );
 extern size_t efidp_len ( const EFI_DEVICE_PATH_PROTOCOL *path );
 extern EFI_DEVICE_PATH_PROTOCOL * efidp_from_text ( const char *text );

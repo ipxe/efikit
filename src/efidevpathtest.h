@@ -23,5 +23,6 @@ extern void assert_efidp_text ( const EFI_DEVICE_PATH_PROTOCOL *path,
 extern void test_hddpath ( void **state );
 extern void test_macpath ( void **state );
 extern void test_uripath ( void **state );
+extern void test_fvfilepath ( void **state );
 
 #endif /* _EFIDEVPATHTEST_H */

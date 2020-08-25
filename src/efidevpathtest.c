@@ -15,6 +15,16 @@
 
 #include "efidevpathtest.h"
 
+/** OVMF firmware volume GUID */
+#define OVMF_FV_NAME_GUID					\
+	{ 0x7cb8bdc9, 0xf8eb, 0x4f34,				\
+	  { 0xaa, 0xea, 0x3e, 0xe4, 0xaf, 0x65, 0x16, 0xa1 } }
+
+/** UEFI shell file GUID */
+#define UEFI_SHELL_FILE_GUID					\
+	{ 0x7c04a583, 0x9e3e, 0x4f1c,				\
+	  { 0xad, 0x65, 0xe0, 0x52, 0x68, 0xd0, 0xb4, 0xd1 } }
+
 /**
  * Test conversion from device path to text
  *
@@ -151,4 +161,23 @@ void test_uripath ( void **state ) {
 	( void ) state;
 	assert_efidp_text ( &path.pciroot.Header, true, true, text );
 	assert_efidp_text ( &path.pciroot.Header, false, false, text_long );
+}
+
+/** Test firmware file device path */
+void test_fvfilepath ( void **state ) {
+	static const char *text =
+		"Fv(7CB8BDC9-F8EB-4F34-AAEA-3EE4AF6516A1)/"
+		"FvFile(7C04A583-9E3E-4F1C-AD65-E05268D0B4D1)";
+	static const struct {
+		MEDIA_FW_VOL_DEVICE_PATH fvvol;
+		MEDIA_FW_VOL_FILEPATH_DEVICE_PATH fvfile;
+		EFI_DEVICE_PATH_PROTOCOL end;
+	} __attribute__ (( packed )) path = {
+		.fvvol = EFIDP_FV ( OVMF_FV_NAME_GUID ),
+		.fvfile = EFIDP_FVFILE ( UEFI_SHELL_FILE_GUID ),
+		.end = EFIDP_END,
+	};
+
+	( void ) state;
+	assert_efidp_text ( &path.fvvol.Header, true, true, text );
 }
