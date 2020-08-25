@@ -29,7 +29,7 @@ static GOptionEntry options[] = {
 	  "Use shortcut representation", NULL },
 	{ "text", 't', 0, G_OPTION_ARG_STRING, &text,
 	  "Convert text back to EFI device path", "TEXT" },
-	{ NULL }
+	{}
 };
 
 /**
