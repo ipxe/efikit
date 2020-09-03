@@ -225,10 +225,12 @@ uint32_t efiboot_attributes ( const struct efi_boot_entry *entry ) {
  *
  * @v entry		EFI boot entry
  * @v attributes	Attributes
+ * @ret ok		Success indicator
  */
-void efiboot_set_attributes ( struct efi_boot_entry *entry,
-			      uint32_t attributes ) {
+int efiboot_set_attributes ( struct efi_boot_entry *entry,
+			     uint32_t attributes ) {
 	entry->attributes = attributes;
+	return 1;
 }
 
 /**
@@ -457,7 +459,8 @@ struct efi_boot_entry * efiboot_new ( uint32_t attributes,
 	memset ( entry, 0, sizeof ( *entry ) );
 
 	/* Set attributes */
-	efiboot_set_attributes ( entry, attributes );
+	if ( ! efiboot_set_attributes ( entry, attributes ) )
+		goto err_attributes;
 
 	/* Set description */
 	if ( ! efiboot_set_description ( entry, description ) )
@@ -476,6 +479,7 @@ struct efi_boot_entry * efiboot_new ( uint32_t attributes,
  err_data:
  err_paths:
  err_description:
+ err_attributes:
 	efiboot_free ( entry );
  err_alloc:
 	return NULL;

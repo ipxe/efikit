@@ -28,8 +28,8 @@ efiboot_from_option ( const EFI_LOAD_OPTION *option, size_t len );
 extern EFI_LOAD_OPTION * efiboot_to_option ( const struct efi_boot_entry *entry,
 					     size_t *len );
 extern uint32_t efiboot_attributes ( const struct efi_boot_entry *entry );
-extern void efiboot_set_attributes ( struct efi_boot_entry *entry,
-				     uint32_t attributes );
+extern int efiboot_set_attributes ( struct efi_boot_entry *entry,
+				    uint32_t attributes );
 extern const char * efiboot_description ( const struct efi_boot_entry *entry );
 extern int efiboot_set_description ( struct efi_boot_entry *entry,
 				     const char *desc );
