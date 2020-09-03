@@ -20,6 +20,10 @@
 
 /** An EFI boot entry */
 struct efi_boot_entry {
+	/** Type */
+	enum efi_boot_option_type type;
+	/** Index */
+	unsigned int index;
 	/** Attributes */
 	uint32_t attributes;
 	/** Description (as UTF8 string) */
@@ -100,6 +104,8 @@ struct efi_boot_entry * efiboot_from_option ( const EFI_LOAD_OPTION *option,
 	if ( ! entry )
 		goto err_entry;
 	memset ( entry, 0, sizeof ( *entry ) );
+	entry->type = EFIBOOT_TYPE_BOOT;
+	entry->index = EFIBOOT_INDEX_AUTO;
 	entry->attributes = option->Attributes;
 
 	/* Populate description */
@@ -208,6 +214,64 @@ EFI_LOAD_OPTION * efiboot_to_option ( const struct efi_boot_entry *entry,
 	free ( desc );
  err_desc:
 	return NULL;
+}
+
+/**
+ * Get load option type
+ *
+ * @v entry		EFI boot entry
+ * @ret type		Load option type
+ */
+enum efi_boot_option_type efiboot_type ( const struct efi_boot_entry *entry ) {
+	return entry->type;
+}
+
+/**
+ * Set load option type
+ *
+ * @v entry		EFI boot entry
+ * @v type		Load option type
+ * @ret ok		Success indicator
+ */
+int efiboot_set_type ( struct efi_boot_entry *entry,
+		       enum efi_boot_option_type type ) {
+
+	/* Sanity check */
+	if ( ( type < 0 ) || ( type >= EFIBOOT_TYPE_MAX ) )
+		return 0;
+
+	/* Set type */
+	entry->type = type;
+
+	return 1;
+}
+
+/**
+ * Get index
+ *
+ * @v entry		EFI boot entry
+ * @ret index		Index (or @c EFIBOOT_INDEX_AUTO)
+ */
+unsigned int efiboot_index ( const struct efi_boot_entry *entry ) {
+	return entry->index;
+}
+
+/**
+ * Set index
+ *
+ * @v entry		EFI boot entry
+ * @v index		Index (or @c EFIBOOT_INDEX_AUTO)
+ */
+int efiboot_set_index ( struct efi_boot_entry *entry, unsigned int index ) {
+
+	/* Sanity check */
+	if ( ( index > EFIBOOT_INDEX_MAX ) && ( index != EFIBOOT_INDEX_AUTO ) )
+		return 0;
+
+	/* Set index */
+	entry->index = index;
+
+	return 1;
 }
 
 /**
@@ -437,6 +501,8 @@ void efiboot_clear_data ( struct efi_boot_entry *entry ) {
 /**
  * Create EFI boot entry
  *
+ * @v type		Load option type
+ * @v index		Index (or @c EFIBOOT_INDEX_AUTO)
  * @v attributes	Attributes
  * @v description	Description (as UTF8 string)
  * @v paths		Device paths
@@ -445,7 +511,8 @@ void efiboot_clear_data ( struct efi_boot_entry *entry ) {
  * @v len		Length of optional data (0 if no optional data)
  * @ret entry		EFI boot entry, or NULL on error
  */
-struct efi_boot_entry * efiboot_new ( uint32_t attributes,
+struct efi_boot_entry * efiboot_new ( enum efi_boot_option_type type,
+				      unsigned int index, uint32_t attributes,
 				      const char *description,
 				      EFI_DEVICE_PATH_PROTOCOL **paths,
 				      unsigned int count, const void *data,
@@ -457,6 +524,14 @@ struct efi_boot_entry * efiboot_new ( uint32_t attributes,
 	if ( ! entry )
 		goto err_alloc;
 	memset ( entry, 0, sizeof ( *entry ) );
+
+	/* Set type */
+	if ( ! efiboot_set_type ( entry, type ) )
+		goto err_type;
+
+	/* Set index */
+	if ( ! efiboot_set_index ( entry, index ) )
+		goto err_index;
 
 	/* Set attributes */
 	if ( ! efiboot_set_attributes ( entry, attributes ) )
@@ -480,6 +555,8 @@ struct efi_boot_entry * efiboot_new ( uint32_t attributes,
  err_paths:
  err_description:
  err_attributes:
+ err_index:
+ err_type:
 	efiboot_free ( entry );
  err_alloc:
 	return NULL;

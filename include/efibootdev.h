@@ -22,11 +22,32 @@ extern "C" {
 /** An EFI boot entry */
 struct efi_boot_entry;
 
+/** EFI boot load option types */
+enum efi_boot_option_type {
+	EFIBOOT_TYPE_BOOT = 0,
+	EFIBOOT_TYPE_DRIVER,
+	EFIBOOT_TYPE_SYSPREP,
+	EFIBOOT_TYPE_MAX = EFIBOOT_TYPE_SYSPREP
+};
+
+/** Maximum valid boot index */
+#define EFIBOOT_INDEX_MAX 0xffffU
+
+/** Auto-assigned boot index */
+#define EFIBOOT_INDEX_AUTO -1U
+
 extern void efiboot_free ( struct efi_boot_entry *entry );
 extern struct efi_boot_entry *
 efiboot_from_option ( const EFI_LOAD_OPTION *option, size_t len );
 extern EFI_LOAD_OPTION * efiboot_to_option ( const struct efi_boot_entry *entry,
 					     size_t *len );
+extern enum efi_boot_option_type
+efiboot_type ( const struct efi_boot_entry *entry );
+extern int efiboot_set_type ( struct efi_boot_entry *entry,
+			      enum efi_boot_option_type type );
+extern unsigned int efiboot_index ( const struct efi_boot_entry *entry );
+extern int efiboot_set_index ( struct efi_boot_entry *entry,
+			       unsigned int index );
 extern uint32_t efiboot_attributes ( const struct efi_boot_entry *entry );
 extern int efiboot_set_attributes ( struct efi_boot_entry *entry,
 				    uint32_t attributes );
@@ -47,7 +68,8 @@ extern int efiboot_set_data ( struct efi_boot_entry *entry, const void *data,
 			      size_t len );
 extern void efiboot_clear_data ( struct efi_boot_entry *entry );
 extern struct efi_boot_entry *
-efiboot_new ( uint32_t attributes, const char *description,
+efiboot_new ( enum efi_boot_option_type type, unsigned int index,
+	      uint32_t attributes, const char *description,
 	      EFI_DEVICE_PATH_PROTOCOL **paths, unsigned int count,
 	      const void *data, size_t len );
 

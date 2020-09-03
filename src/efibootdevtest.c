@@ -80,7 +80,8 @@ static void assert_efiboot_to_option ( const struct efi_boot_entry_test *test,
 	}
 
 	/* Construct boot entry */
-	entry = efiboot_new ( test->attributes, test->description, paths,
+	entry = efiboot_new ( EFIBOOT_TYPE_BOOT, EFIBOOT_INDEX_AUTO,
+			      test->attributes, test->description, paths,
 			      test->count, test->data, test->len );
 	assert_non_null ( entry );
 	assert_efiboot_entry ( entry, test );
