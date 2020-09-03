@@ -43,7 +43,13 @@ export CMOCKA_MESSAGE_OUTPUT=TAP
 
 libefikit_la_SOURCES = \
 	libefidevpath.c \
-	libefibootdev.c
+	libefibootdev.c \
+	efivars.c \
+	efivars.h
+
+libefikit_la_CPPFLAGS = \
+	$(EFIVAR_CFLAGS) \
+	$(AM_CPPFLAGS)
 
 libefikit_la_LDFLAGS = \
 	-export-symbols-regex '^(efidp|efiboot)_' \
@@ -56,7 +62,8 @@ libefikit_la_LIBADD = \
 	libmdebasememory.la \
 	libmdebaseprint.la \
 	libmdeuefidevicepath.la \
-	$(LTLIBICONV)
+	$(LTLIBICONV) \
+	$(EFIVAR_LIBS)
 
 efikittest_SOURCES = \
 	efikittest.c \

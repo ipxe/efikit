@@ -5,6 +5,7 @@ AC_CONFIG_SRCDIR([include/edk2/ProcessorBind.h])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_HEADERS([config.h])
 AC_REQUIRE_AUX_FILE([tap-driver.sh])
+AC_CANONICAL_HOST
 
 # Check for programs
 AC_PROG_CC
@@ -20,6 +21,21 @@ AM_INIT_AUTOMAKE([foreign subdir-objects tar-ustar])
 # Check for libraries
 PKG_CHECK_MODULES(GLIB, glib-2.0)
 PKG_CHECK_MODULES(CMOCKA, cmocka)
+
+# Select EFI variable access mechanism
+case "${host_os}" in
+    linux*)
+	PKG_CHECK_MODULES(EFIVAR, efivar)
+	AC_DEFINE([EFIVAR_LIBEFIVAR], [1], [Use libefivar for variable access])
+	;;
+    windows*|mingw*)
+	AC_DEFINE([EFIVAR_WINDOWS], [1], [Use Windows API for variable access])
+	;;
+    *)
+	AC_DEFINE([EFIVAR_DUMMY], [1], [Use dummy variable access])
+	AC_MSG_WARN(["No EFI variable access mechanism for ${host_os}"])
+	;;
+esac
 
 # Checks
 AC_CHECK_HEADERS([])

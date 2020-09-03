@@ -9,6 +9,7 @@
 
 #include <stdint.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <Uefi/UefiBaseType.h>
 #include <Uefi/UefiSpec.h>
@@ -17,6 +18,18 @@
 #include <efibootdev.h>
 
 #include "strconvert.h"
+#include "efivars.h"
+
+/** Boot variable name prefixes */
+static const char *efiboot_prefix[] = {
+	[EFIBOOT_TYPE_BOOT] = "Boot",
+	[EFIBOOT_TYPE_DRIVER] = "Driver",
+	[EFIBOOT_TYPE_SYSPREP] = "SysPrep",
+};
+
+/** Maximum length of a boot variable name */
+#define EFIBOOT_NAME_LEN \
+	( 7 /* "SysPrep" */ + 5 /* "Order" */ + 1 /* NUL */ )
 
 /** An EFI boot entry device path */
 struct efi_boot_entry_path {
@@ -617,4 +630,144 @@ struct efi_boot_entry * efiboot_new ( enum efi_boot_option_type type,
 	efiboot_free ( entry );
  err_alloc:
 	return NULL;
+}
+
+/**
+ * Construct EFI variable name
+ *
+ * @v type		Load option type
+ * @v index		Load option index
+ * @v buf		Variable name buffer
+ * @ret ok		Success indicator
+ */
+static int efiboot_name ( enum efi_boot_option_type type, unsigned int index,
+			  char *buf ) {
+
+	/* Sanity checks */
+	if ( ( type < 0 ) || ( type > EFIBOOT_TYPE_MAX ) )
+		return 0;
+	if ( index > EFIBOOT_INDEX_MAX )
+		return 0;
+
+	/* Construct name */
+	snprintf ( buf, EFIBOOT_NAME_LEN, "%s%04x",
+		   efiboot_prefix[type], index );
+
+	return 1;
+}
+
+/**
+ * Automatically assign EFI variable index
+ *
+ * @v entry		EFI boot entry
+ * @ret ok		Success indicator
+ */
+static int efiboot_autoindex ( struct efi_boot_entry *entry ) {
+	char name[EFIBOOT_NAME_LEN];
+	unsigned int index;
+
+	/* Find an unused index */
+	for ( index = 0 ; index <= EFIBOOT_INDEX_MAX ; index++ ) {
+		if ( ! efiboot_name ( entry->type, index, name ) )
+			continue;
+		if ( efivars_exists ( name ) )
+			continue;
+		entry->index = index;
+		return 1;
+	}
+
+	return 0;
+}
+
+/**
+ * Load boot entry from EFI variable
+ *
+ * @v type		Load option type
+ * @v index		Load option index
+ * @ret entry		EFI boot entry, or NULL on error
+ *
+ * The boot entry is an opaque structure including embedded pointers
+ * to dynamically allocated memory.  It must eventually be freed by
+ * the caller using efiboot_free().
+ */
+struct efi_boot_entry * efiboot_load ( enum efi_boot_option_type type,
+				       unsigned int index ) {
+	struct efi_boot_entry *entry;
+	char name[EFIBOOT_NAME_LEN];
+	void *data;
+	size_t len;
+
+	/* Construct variable name */
+	if ( ! efiboot_name ( type, index, name ) )
+		goto err_name;
+
+	/* Read variable data */
+	if ( ! efivars_read ( name, &data, &len ) )
+		goto err_read;
+
+	/* Parse boot entry */
+	entry = efiboot_from_option ( data, len );
+	if ( ! entry )
+		goto err_from_option;
+
+	/* Record type and index */
+	entry->type = type;
+	entry->index = index;
+
+	/* Free variable data */
+	free ( data );
+
+	return entry;
+
+ err_from_option:
+	free ( data );
+ err_read:
+ err_name:
+	return NULL;
+}
+
+/**
+ * Save boot entry to EFI variable
+ *
+ * @v entry		EFI boot entry
+ * @ret ok		Success indicator
+ *
+ * If the boot entry index is @c EFIBOOT_INDEX_AUTO then it will be
+ * updated to reflect the automatically selected index.
+ */
+int efiboot_save ( struct efi_boot_entry *entry ) {
+	char name[EFIBOOT_NAME_LEN];
+	EFI_LOAD_OPTION *option;
+	size_t len;
+
+	/* Select index, if applicable */
+	if ( entry->index == EFIBOOT_INDEX_AUTO ) {
+		if ( ! efiboot_autoindex ( entry ) )
+			goto err_autoindex;
+	}
+
+	/* Construct variable name */
+	if ( ! efiboot_name ( entry->type, entry->index, name ) )
+		goto err_name;
+
+	/* Construct load option */
+	option = efiboot_to_option ( entry, &len );
+	if ( ! option )
+		goto err_to_option;
+
+	/* Write variable data */
+	if ( ! efivars_write ( name, option, len ) )
+		goto err_write;
+
+	/* Free load option */
+	free ( option );
+
+	return 1;
+
+ err_write:
+	free ( option );
+ err_to_option:
+ err_name:
+ err_autoindex:
+	return 0;
 }

@@ -12,7 +12,7 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y -o Acquire::Retries=50 \
-            autoconf-archive valgrind gettext libcmocka-dev
+            autoconf-archive valgrind gettext libcmocka-dev libefivar-dev
       - name: Check out code
         uses: actions/checkout@v2
         with:
@@ -51,7 +51,7 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y -o Acquire::Retries=50 \
-            valgrind gettext libcmocka-dev
+            valgrind gettext libcmocka-dev libefivar-dev
       - name: Download
         uses: actions/download-artifact@v2
         with:
