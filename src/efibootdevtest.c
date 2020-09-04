@@ -42,6 +42,7 @@ struct efi_boot_entry_test {
 static void assert_efiboot_entry ( const struct efi_boot_entry *entry,
 				   const struct efi_boot_entry_test *test ) {
 	const EFI_DEVICE_PATH_PROTOCOL *path;
+	const char *text;
 	unsigned int i;
 
 	assert_int_equal ( efiboot_attributes ( entry ), test->attributes );
@@ -52,6 +53,9 @@ static void assert_efiboot_entry ( const struct efi_boot_entry *entry,
 		path = efiboot_path ( entry, i );
 		assert_non_null ( path );
 		assert_efidp_from_text ( test->paths[i], path );
+		text = efiboot_path_text ( entry, i );
+		assert_non_null ( path );
+		assert_efidp_from_text ( text, path );
 	}
 	assert_int_equal ( efiboot_data_len ( entry ), test->len );
 	assert_memory_equal ( efiboot_data ( entry ), test->data, test->len );

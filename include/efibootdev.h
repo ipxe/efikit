@@ -57,6 +57,8 @@ extern int efiboot_set_description ( struct efi_boot_entry *entry,
 extern unsigned int efiboot_path_count ( const struct efi_boot_entry *entry );
 extern const EFI_DEVICE_PATH_PROTOCOL *
 efiboot_path ( const struct efi_boot_entry *entry, unsigned int index );
+extern const char * efiboot_path_text ( const struct efi_boot_entry *entry,
+					unsigned int index );
 extern int efiboot_set_paths ( struct efi_boot_entry *entry,
 			       EFI_DEVICE_PATH_PROTOCOL **paths,
 			       unsigned int count );

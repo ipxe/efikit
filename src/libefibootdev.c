@@ -18,6 +18,14 @@
 
 #include "strconvert.h"
 
+/** An EFI boot entry device path */
+struct efi_boot_entry_path {
+	/** Device path protocol */
+	EFI_DEVICE_PATH_PROTOCOL *path;
+	/** Cached canonical textual representation (as UTF8 string) */
+	char *text;
+};
+
 /** An EFI boot entry */
 struct efi_boot_entry {
 	/** Type */
@@ -29,7 +37,7 @@ struct efi_boot_entry {
 	/** Description (as UTF8 string) */
 	char *description;
 	/** Device paths */
-	EFI_DEVICE_PATH_PROTOCOL **paths;
+	struct efi_boot_entry_path *paths;
 	/** Number of device paths */
 	unsigned int count;
 	/** Optional data */
@@ -39,12 +47,27 @@ struct efi_boot_entry {
 };
 
 /**
+ * Free EFI boot entry cached device path textual representations
+ *
+ * @v entry		EFI boot entry
+ */
+static void efiboot_free_text ( struct efi_boot_entry *entry ) {
+	unsigned int i;
+
+	for ( i = 0 ; i < entry->count ; i++ ) {
+		free ( entry->paths[i].text );
+		entry->paths[i].text = NULL;
+	}
+}
+
+/**
  * Free EFI boot entry
  *
  * @v entry		EFI boot entry
  */
 void efiboot_free ( struct efi_boot_entry *entry ) {
 
+	efiboot_free_text ( entry );
 	free ( entry->data );
 	free ( entry->paths );
 	free ( entry->description );
@@ -124,7 +147,8 @@ struct efi_boot_entry * efiboot_from_option ( const EFI_LOAD_OPTION *option,
 	memcpy ( path, ( ( ( void * ) desc ) + desclen ),
 		 option->FilePathListLength );
 	for ( i = 0 ; i < count ; i++ ) {
-		entry->paths[i] = path;
+		entry->paths[i].path = path;
+		entry->paths[i].text = NULL;
 		path = ( ( ( void * ) path ) + efidp_len ( path ) );
 	}
 	entry->count = count;
@@ -183,7 +207,7 @@ EFI_LOAD_OPTION * efiboot_to_option ( const struct efi_boot_entry *entry,
 	desclen = StrSize ( desc );
 	pathslen = 0;
 	for ( i = 0 ; i < entry->count ; i++ )
-		pathslen += efidp_len ( entry->paths[i] );
+		pathslen += efidp_len ( entry->paths[i].path );
 	*len = ( sizeof ( *option ) + desclen + pathslen + entry->len );
 
 	/* Allocate option */
@@ -198,8 +222,8 @@ EFI_LOAD_OPTION * efiboot_to_option ( const struct efi_boot_entry *entry,
 	memcpy ( tmp, desc, desclen );
 	tmp += desclen;
 	for ( i = 0 ; i < entry->count ; i++ ) {
-		pathlen = efidp_len ( entry->paths[i] );
-		memcpy ( tmp, entry->paths[i], pathlen );
+		pathlen = efidp_len ( entry->paths[i].path );
+		memcpy ( tmp, entry->paths[i].path, pathlen );
 		tmp += pathlen;
 	}
 	memcpy ( tmp, entry->data, entry->len );
@@ -237,7 +261,7 @@ int efiboot_set_type ( struct efi_boot_entry *entry,
 		       enum efi_boot_option_type type ) {
 
 	/* Sanity check */
-	if ( ( type < 0 ) || ( type >= EFIBOOT_TYPE_MAX ) )
+	if ( ( type < 0 ) || ( type > EFIBOOT_TYPE_MAX ) )
 		return 0;
 
 	/* Set type */
@@ -316,7 +340,6 @@ const char * efiboot_description ( const struct efi_boot_entry *entry ) {
  */
 int efiboot_set_description ( struct efi_boot_entry *entry,
 			      const char *desc ) {
-	char *old = entry->description;
 	char *tmp;
 
 	/* Copy description */
@@ -324,11 +347,11 @@ int efiboot_set_description ( struct efi_boot_entry *entry,
 	if ( ! tmp )
 		return 0;
 
+	/* Free old description */
+	free ( entry->description );
+
 	/* Update description */
 	entry->description = tmp;
-
-	/* Free old description */
-	free ( old );
 
 	return 1;
 }
@@ -359,7 +382,32 @@ efiboot_path ( const struct efi_boot_entry *entry, unsigned int index ) {
 	if ( index >= entry->count )
 		return NULL;
 
-	return entry->paths[index];
+	return entry->paths[index].path;
+}
+
+/**
+ * Get device path canonical textual representation
+ *
+ * @v entry		EFI boot entry
+ * @v index		Path index
+ * @ret path		Device path (or NULL on error)
+ *
+ * Path index 0 is guaranteed to always exist.
+ */
+const char * efiboot_path_text ( const struct efi_boot_entry *entry,
+				 unsigned int index ) {
+	struct efi_boot_entry_path *path;
+
+	/* Sanity check */
+	if ( index >= entry->count )
+		return NULL;
+
+	/* Create cached representation if needed */
+	path = &entry->paths[index];
+	if ( ! path->text )
+		path->text = efidp_to_text ( path->path, false, true );
+
+	return path->text;
 }
 
 /**
@@ -372,8 +420,7 @@ efiboot_path ( const struct efi_boot_entry *entry, unsigned int index ) {
  */
 int efiboot_set_paths ( struct efi_boot_entry *entry,
 			EFI_DEVICE_PATH_PROTOCOL **paths, unsigned int count ) {
-	EFI_DEVICE_PATH_PROTOCOL **old = entry->paths;
-	EFI_DEVICE_PATH_PROTOCOL **tmp;
+	struct efi_boot_entry_path *tmp;
 	EFI_DEVICE_PATH_PROTOCOL *path;
 	size_t len;
 	unsigned int i;
@@ -386,23 +433,25 @@ int efiboot_set_paths ( struct efi_boot_entry *entry,
 	len = 0;
 	for ( i = 0 ; i < count ; i++ )
 		len += efidp_len ( paths[i] );
-	tmp = malloc ( ( count * sizeof ( paths[0] ) ) + len );
+	tmp = malloc ( ( count * sizeof ( tmp[0] ) ) + len );
 	if ( ! tmp )
 		return 0;
 	path = ( ( ( void * ) tmp ) + ( count * sizeof ( tmp[0] ) ) );
 	for ( i = 0 ; i < count ; i++ ) {
-		tmp[i] = path;
+		tmp[i].path = path;
+		tmp[i].text = NULL;
 		len = efidp_len ( paths[i] );
 		memcpy ( path, paths[i], len );
 		path = ( ( ( void * ) path ) + len );
 	}
 
+	/* Free old device paths */
+	efiboot_free_text ( entry );
+	free ( entry->paths );
+
 	/* Update device paths */
 	entry->paths = tmp;
 	entry->count = count;
-
-	/* Free old device paths */
-	free ( old );
 
 	return 1;
 }
@@ -417,23 +466,32 @@ int efiboot_set_paths ( struct efi_boot_entry *entry,
  */
 int efiboot_set_path ( struct efi_boot_entry *entry, unsigned int index,
 		       const EFI_DEVICE_PATH_PROTOCOL *path ) {
-	EFI_DEVICE_PATH_PROTOCOL *tmp;
+	EFI_DEVICE_PATH_PROTOCOL **paths;
+	unsigned int i;
 
 	/* Sanity check */
 	if ( index >= entry->count )
-		return 0;
+		goto err_count;
 
-	/* Temporarily modify path */
-	tmp = entry->paths[index];
-	entry->paths[index] = ( ( EFI_DEVICE_PATH_PROTOCOL * ) path );
+	/* Construct updated list of device paths */
+	paths = malloc ( entry->count * sizeof ( paths[0] ) );
+	if ( ! paths )
+		goto err_alloc;
+	for ( i = 0 ; i < entry->count ; i++ )
+		paths[i] = entry->paths[i].path;
+	paths[index] = ( ( EFI_DEVICE_PATH_PROTOCOL * ) path );
 
 	/* Set device paths */
-	if ( ! efiboot_set_paths ( entry, entry->paths, entry->count ) ) {
-		entry->paths[index] = tmp;
-		return 0;
-	}
+	if ( ! efiboot_set_paths ( entry, paths, entry->count ) )
+		goto err_set_paths;
 
 	return 1;
+
+ err_set_paths:
+	free ( paths );
+ err_alloc:
+ err_count:
+	return 0;
 }
 
 /**
@@ -466,7 +524,6 @@ size_t efiboot_data_len ( const struct efi_boot_entry *entry ) {
  */
 int efiboot_set_data ( struct efi_boot_entry *entry, const void *data,
 		       size_t len ) {
-	void *old = entry->data;
 	void *tmp;
 
 	/* Copy data */
@@ -479,12 +536,12 @@ int efiboot_set_data ( struct efi_boot_entry *entry, const void *data,
 		tmp = NULL;
 	}
 
+	/* Free old optional data */
+	free ( entry->data );
+
 	/* Update optional data */
 	entry->data = tmp;
 	entry->len = len;
-
-	/* Free old optional data */
-	free ( old );
 
 	return 1;
 }
