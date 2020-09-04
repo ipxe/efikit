@@ -7,6 +7,7 @@
  *
  */
 
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -41,6 +42,8 @@ struct efi_boot_entry_path {
 
 /** An EFI boot entry */
 struct efi_boot_entry {
+	/** Modification flag */
+	bool modified;
 	/** Type */
 	enum efi_boot_option_type type;
 	/** Index */
@@ -140,6 +143,7 @@ struct efi_boot_entry * efiboot_from_option ( const EFI_LOAD_OPTION *option,
 	if ( ! entry )
 		goto err_entry;
 	memset ( entry, 0, sizeof ( *entry ) );
+	entry->modified = false;
 	entry->type = EFIBOOT_TYPE_BOOT;
 	entry->index = EFIBOOT_INDEX_AUTO;
 	entry->attributes = option->Attributes;
@@ -280,6 +284,9 @@ int efiboot_set_type ( struct efi_boot_entry *entry,
 	/* Set type */
 	entry->type = type;
 
+	/* Mark as modified */
+	entry->modified = true;
+
 	return 1;
 }
 
@@ -308,6 +315,9 @@ int efiboot_set_index ( struct efi_boot_entry *entry, unsigned int index ) {
 	/* Set index */
 	entry->index = index;
 
+	/* Mark as modified */
+	entry->modified = true;
+
 	return 1;
 }
 
@@ -330,7 +340,13 @@ uint32_t efiboot_attributes ( const struct efi_boot_entry *entry ) {
  */
 int efiboot_set_attributes ( struct efi_boot_entry *entry,
 			     uint32_t attributes ) {
+
+	/* Set attributes */
 	entry->attributes = attributes;
+
+	/* Mark as modified */
+	entry->modified = true;
+
 	return 1;
 }
 
@@ -365,6 +381,9 @@ int efiboot_set_description ( struct efi_boot_entry *entry,
 
 	/* Update description */
 	entry->description = tmp;
+
+	/* Mark as modified */
+	entry->modified = true;
 
 	return 1;
 }
@@ -466,6 +485,9 @@ int efiboot_set_paths ( struct efi_boot_entry *entry,
 	entry->paths = tmp;
 	entry->count = count;
 
+	/* Mark as modified */
+	entry->modified = true;
+
 	return 1;
 }
 
@@ -556,6 +578,9 @@ int efiboot_set_data ( struct efi_boot_entry *entry, const void *data,
 	entry->data = tmp;
 	entry->len = len;
 
+	/* Mark as modified */
+	entry->modified = true;
+
 	return 1;
 }
 
@@ -594,6 +619,7 @@ struct efi_boot_entry * efiboot_new ( enum efi_boot_option_type type,
 	if ( ! entry )
 		goto err_alloc;
 	memset ( entry, 0, sizeof ( *entry ) );
+	entry->modified = true;
 
 	/* Set type */
 	if ( ! efiboot_set_type ( entry, type ) )
@@ -668,11 +694,19 @@ static int efiboot_autoindex ( struct efi_boot_entry *entry ) {
 
 	/* Find an unused index */
 	for ( index = 0 ; index <= EFIBOOT_INDEX_MAX ; index++ ) {
+
+		/* Skip if already in use */
 		if ( ! efiboot_name ( entry->type, index, name ) )
 			continue;
 		if ( efivars_exists ( name ) )
 			continue;
+
+		/* Record selected index */
 		entry->index = index;
+
+		/* Mark as modified */
+		entry->modified = true;
+
 		return 1;
 	}
 
@@ -740,6 +774,10 @@ int efiboot_save ( struct efi_boot_entry *entry ) {
 	EFI_LOAD_OPTION *option;
 	size_t len;
 
+	/* Skip saving if entry is unmodified */
+	if ( ! entry->modified )
+		return 1;
+
 	/* Select index, if applicable */
 	if ( entry->index == EFIBOOT_INDEX_AUTO ) {
 		if ( ! efiboot_autoindex ( entry ) )
@@ -761,6 +799,9 @@ int efiboot_save ( struct efi_boot_entry *entry ) {
 
 	/* Free load option */
 	free ( option );
+
+	/* Clear modification flag */
+	entry->modified = false;
 
 	return 1;
 
