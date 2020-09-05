@@ -683,6 +683,25 @@ static int efiboot_name ( enum efi_boot_option_type type, unsigned int index,
 }
 
 /**
+ * Construct EFI order variable name
+ *
+ * @v type		Load option type
+ * @v buf		Variable name buffer
+ * @ret ok		Success indicator
+ */
+static int efiboot_order_name ( enum efi_boot_option_type type, char *buf ) {
+
+	/* Sanity checks */
+	if ( ( type < 0 ) || ( type > EFIBOOT_TYPE_MAX ) )
+		return 0;
+
+	/* Construct name */
+	snprintf ( buf, EFIBOOT_NAME_LEN, "%sOrder", efiboot_prefix[type] );
+
+	return 1;
+}
+
+/**
  * Automatically assign EFI variable index
  *
  * @v entry		EFI boot entry
@@ -810,5 +829,134 @@ int efiboot_save ( struct efi_boot_entry *entry ) {
  err_to_option:
  err_name:
  err_autoindex:
+	return 0;
+}
+
+/**
+ * Free EFI boot entry list
+ *
+ * @v entries		List of boot entries
+ */
+void efiboot_free_all ( struct efi_boot_entry **entries ) {
+	struct efi_boot_entry **tmp;
+
+	for ( tmp = entries ; *tmp ; tmp++ )
+		efiboot_free ( *tmp );
+	free ( entries );
+}
+
+/**
+ * Load EFI boot entry list from EFI variables
+ *
+ * @v type		Load option type
+ * @ret entries		List of boot entries (NULL terminated), or NULL on error
+ *
+ * The list of boot entries is dynamically allocated and must
+ * eventually be freed by the caller using efiboot_free_all().
+ */
+struct efi_boot_entry ** efiboot_load_all ( enum efi_boot_option_type type ) {
+	struct efi_boot_entry **entries;
+	char name[EFIBOOT_NAME_LEN];
+	void *data;
+	size_t len;
+	uint16_t *index;
+	int count;
+	int i;
+
+	/* Construct order variable name */
+	if ( ! efiboot_order_name ( type, name ) )
+		goto err_name;
+
+	/* Read order variable */
+	if ( ! efivars_read ( name, &data, &len ) )
+		goto err_read;
+
+	/* Allocate list of entries */
+	index = data;
+	count = ( len / sizeof ( index[0] ) );
+	entries = malloc ( ( count + 1 /* NULL */ ) * sizeof ( entries[0] ) );
+	if ( ! entries )
+		goto err_alloc;
+	for ( i = 0 ; i < count ; i++ ) {
+		entries[i] = efiboot_load ( type, index[i] );
+		if ( ! entries[i] )
+			goto err_load;
+	}
+	entries[count] = NULL;
+
+	/* Free order variable */
+	free ( data );
+
+	return entries;
+
+ err_load:
+	for ( i-- ; i >= 0 ; i-- )
+		efiboot_free ( entries[i] );
+	free ( entries );
+ err_alloc:
+	free ( data );
+ err_read:
+ err_name:
+	return NULL;
+}
+
+/**
+ * Save EFI boot entry list to EFI variables
+ *
+ * @v type		Load option type
+ * @v entries		List of boot entries (NULL terminated)
+ * @ret ok		Success indicator
+ *
+ * If any boot entry index is @c EFIBOOT_INDEX_AUTO then it will be
+ * updated to reflect the automatically selected index.
+ */
+int efiboot_save_all ( enum efi_boot_option_type type,
+		       struct efi_boot_entry **entries ) {
+	char name[EFIBOOT_NAME_LEN];
+	uint16_t *index;
+	size_t len;
+	unsigned int count;
+	unsigned int i;
+
+	/* Construct order variable name */
+	if ( ! efiboot_order_name ( type, name ) )
+		goto err_name;
+
+	/* Count number of entries */
+	for ( count = 0 ; entries[count] ; count++ ) {}
+
+	/* Save each individual entry */
+	for ( i = 0 ; i < count ; i++ ) {
+		if ( entries[i]->type != type )
+			goto err_type;
+		if ( ! efiboot_save ( entries[i] ) )
+			goto err_save;
+	}
+
+	/* Allocate order variable */
+	len = ( count * sizeof ( index[0] ) );
+	index = malloc ( len );
+	if ( ! index )
+		goto err_alloc;
+
+	/* Construct order variable */
+	for ( i = 0 ; i < count ; i++ )
+		index[i] = entries[i]->index;
+
+	/* Save order variable */
+	if ( ! efivars_write ( name, index, len ) )
+		goto err_write;
+
+	/* Free order variable */
+	free ( index );
+
+	return 1;
+
+ err_write:
+	free ( index );
+ err_alloc:
+ err_save:
+ err_type:
+ err_name:
 	return 0;
 }

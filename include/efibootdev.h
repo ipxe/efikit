@@ -77,6 +77,11 @@ efiboot_new ( enum efi_boot_option_type type, unsigned int index,
 extern struct efi_boot_entry * efiboot_load ( enum efi_boot_option_type type,
 					      unsigned int index );
 extern int efiboot_save ( struct efi_boot_entry *entry );
+extern void efiboot_free_all ( struct efi_boot_entry **entries );
+extern struct efi_boot_entry **
+efiboot_load_all ( enum efi_boot_option_type type );
+extern int efiboot_save_all ( enum efi_boot_option_type type,
+			      struct efi_boot_entry **entries );
 
 #ifdef __cplusplus
 } /* extern "C" */
