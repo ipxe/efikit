@@ -12,7 +12,8 @@ AM_CFLAGS = \
 AM_LDFLAGS = -no-undefined
 
 bin_PROGRAMS = \
-	efidevpath
+	efidevpath \
+	efibootdump
 
 lib_LTLIBRARIES = \
 	libefikit.la
@@ -97,6 +98,15 @@ efidevpath_CPPFLAGS = \
 efidevpath_LDADD = \
 	libefikit.la \
 	$(GLIB_LIBS)
+
+###############################################################################
+#
+# EFI boot dump command-line tool
+#
+###############################################################################
+
+efibootdump_LDADD = \
+	libefikit.la
 
 ###############################################################################
 #
