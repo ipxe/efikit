@@ -148,6 +148,21 @@ jobs:
         with:
           name: windows-failure
           path: .
+      - name: Binary distribution
+        run: |
+          make install DESTDIR=$(pwd)/instdir
+          for exe in instdir/mingw64/bin/*.exe ; do
+            for dll in $(ldd ${exe} | awk '/=>/{print $(NF-1)}' | \
+                        grep -v /c/windows | grep -v instdir/mingw64/bin) ; do
+              cp ${dll} instdir/mingw64/bin/
+            done
+          done
+          strip instdir/mingw64/bin/*.{exe,dll}
+      - name: Upload binaries
+        uses: actions/upload-artifact@v2
+        with:
+          name: windows
+          path: instdir/mingw64/bin
 
   macos:
     name: MacOS
