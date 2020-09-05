@@ -114,7 +114,48 @@ static const char efivars_global[] =
  */
 #define EFIVARS_MAX_LEN 4096
 
+/**
+ * Obtain privileges required to access EFI variables
+ *
+ * @ret ok		Success indicator
+ */
+static int efivars_raise ( void ) {
+	static int raised = 0;
+	HANDLE process;
+	TOKEN_PRIVILEGES privs;
+
+	/* Do nothing if privileges have already been raised */
+	if ( raised )
+		return 1;
+
+	/* Look up privilege */
+	privs.PrivilegeCount = 1;
+	privs.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+	if ( ! LookupPrivilegeValue ( NULL, SE_SYSTEM_ENVIRONMENT_NAME,
+				      &privs.Privileges[0].Luid ) )
+		return 0;
+
+	/* Look up process token */
+	if ( ! OpenProcessToken ( GetCurrentProcess(),
+				  ( TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY ),
+				  &process ) )
+		return 0;
+
+	/* Obtain privilege */
+	if ( ! AdjustTokenPrivileges ( process, FALSE, &privs, 0, NULL, NULL ) )
+		return 0;
+
+	/* Record as raised */
+	raised = 1;
+
+	return 1;
+}
+
 int efivars_read ( const char *name, void **data, size_t *len ) {
+
+	/* Obtain privileges */
+	if ( ! efivars_raise() )
+		goto err_raise;
 
 	/* Allocate space for variable */
 	*data = malloc ( EFIVARS_MAX_LEN );
@@ -133,10 +174,15 @@ int efivars_read ( const char *name, void **data, size_t *len ) {
 	free ( *data );
 	*data = NULL;
  err_alloc:
+ err_raise:
 	return 0;
 }
 
 int efivars_write ( const char *name, const void *data, size_t len ) {
+
+	/* Obtain privileges */
+	if ( ! efivars_raise() )
+		return 0;
 
 	/* Write variable */
 	if ( ! SetFirmwareEnvironmentVariableA ( name, efivars_global,
