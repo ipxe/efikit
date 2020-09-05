@@ -90,9 +90,6 @@ efikittest_LDADD = \
 #
 ###############################################################################
 
-efidevpath_SOURCES = \
-	efidevpath.c
-
 efidevpath_CPPFLAGS = \
 	$(GLIB_CFLAGS) \
 	$(AM_CPPFLAGS)
