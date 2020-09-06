@@ -12,7 +12,7 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y -o Acquire::Retries=50 \
-            autoconf-archive valgrind gettext libcmocka-dev libefivar-dev
+            autoconf-archive valgrind lcov gettext libcmocka-dev libefivar-dev
       - name: Check out code
         uses: actions/checkout@v2
         with:
@@ -41,6 +41,16 @@ jobs:
           name: dist
           path: efikit-*.tar.gz
           if-no-files-found: error
+      - name: Coverage report
+        run: |
+          make clean
+          ./configure --enable-code-coverage
+          make check-code-coverage
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v2
+        with:
+          name: base-coverage
+          path: efikit-*-coverage.info
 
   clang:
     name: Clang
@@ -130,6 +140,7 @@ jobs:
             mingw-w64-x86_64-toolchain
             mingw-w64-x86_64-glib2
             mingw-w64-x86_64-cmocka
+            mingw-w64-x86_64-lcov
       - name: Download
         uses: actions/download-artifact@v2
         with:
@@ -163,6 +174,16 @@ jobs:
         with:
           name: windows
           path: instdir/mingw64/bin
+      - name: Coverage report
+        run: |
+          make clean
+          ./configure --enable-code-coverage
+          make check-code-coverage GENHTML=#skip-genhtml
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v2
+        with:
+          name: windows-coverage
+          path: efikit-*-coverage.info
 
   macos:
     name: MacOS
@@ -171,7 +192,7 @@ jobs:
     steps:
       - name: Install packages
         run: |
-          brew install cmocka gettext glib pkg-config
+          brew install cmocka gettext glib pkg-config lcov
       - name: Download
         uses: actions/download-artifact@v2
         with:
@@ -190,3 +211,13 @@ jobs:
         with:
           name: macos-failure
           path: .
+      - name: Coverage report
+        run: |
+          make clean
+          ./configure --enable-code-coverage
+          make check-code-coverage CODE_COVERAGE_LIBS=
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v2
+        with:
+          name: macos-coverage
+          path: efikit-*-coverage.info
