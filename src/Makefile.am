@@ -1,3 +1,5 @@
+include $(top_srcdir)/aminclude_static.am
+
 @VALGRIND_CHECK_RULES@
 
 AM_CPPFLAGS = \
@@ -50,7 +52,12 @@ libefikit_la_SOURCES = \
 
 libefikit_la_CPPFLAGS = \
 	$(EFIVAR_CFLAGS) \
+	$(CODE_COVERAGE_CPPFLAGS) \
 	$(AM_CPPFLAGS)
+
+libefikit_la_CFLAGS = \
+	$(CODE_COVERAGE_CFLAGS) \
+	$(AM_CFLAGS)
 
 libefikit_la_LDFLAGS = \
 	-export-symbols-regex '^(efidp|efiboot)_' \
@@ -64,7 +71,8 @@ libefikit_la_LIBADD = \
 	libmdebaseprint.la \
 	libmdeuefidevicepath.la \
 	$(LTLIBICONV) \
-	$(EFIVAR_LIBS)
+	$(EFIVAR_LIBS) \
+	$(CODE_COVERAGE_LIBS)
 
 efikittest_SOURCES = \
 	efikittest.c \
@@ -75,15 +83,18 @@ efikittest_SOURCES = \
 
 efikittest_CPPFLAGS = \
 	$(CMOCKA_CFLAGS) \
+	$(CODE_COVERAGE_CPPFLAGS) \
 	$(AM_CPPFLAGS)
 
 efikittest_CFLAGS = \
 	-fshort-wchar \
+	$(CODE_COVERAGE_CFLAGS) \
 	$(AM_CFLAGS)
 
 efikittest_LDADD = \
 	libefikit.la \
-	$(CMOCKA_LIBS)
+	$(CMOCKA_LIBS) \
+	$(CODE_COVERAGE_LIBS)
 
 ###############################################################################
 #
@@ -118,6 +129,17 @@ libcommon_la_SOURCES = \
 	memalloc.c \
 	strconvert.c \
 	strconvert.h
+
+libcommon_la_CPPFLAGS = \
+	$(CODE_COVERAGE_CPPFLAGS) \
+	$(AM_CPPFLAGS)
+
+libcommon_la_CFLAGS = \
+	$(CODE_COVERAGE_CFLAGS) \
+	$(AM_CFLAGS)
+
+libcommon_la_LIBADD = \
+	$(CODE_COVERAGE_LIBS)
 
 ###############################################################################
 #

@@ -56,6 +56,9 @@ AM_EXTRA_RECURSIVE_TARGETS([check-valgrind])
 m4_foreach([vgtool], [valgrind_tool_list],
            [AM_EXTRA_RECURSIVE_TARGETS([check-valgrind-]vgtool)])
 
+# Configure code coverage
+AX_CODE_COVERAGE
+
 # Generate files
 AC_CONFIG_FILES([Makefile src/Makefile include/Makefile])
 AC_OUTPUT

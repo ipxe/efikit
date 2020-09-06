@@ -6,7 +6,7 @@ jobs:
 
   base:
     name: Linux GCC
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04   # Required for usable autoconf-archive
     steps:
       - name: Install packages
         run: |

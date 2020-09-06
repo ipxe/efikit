@@ -1,5 +1,6 @@
 /m4
 /aclocal.m4
+/aminclude_static.am
 /autom4te.cache
 /build-aux
 /configure
@@ -25,4 +26,8 @@ Makefile
 *.tar.gz
 *.dll
 *.exe
+*.gcda
+*.gcno
+*.gcov
+*.info
 .dirstamp
