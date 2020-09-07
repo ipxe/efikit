@@ -47,10 +47,9 @@ jobs:
           ./configure --enable-code-coverage
           make check-code-coverage
       - name: Upload coverage report
-        uses: actions/upload-artifact@v2
+        uses: codecov/codecov-action@v1
         with:
-          name: base-coverage
-          path: efikit-*-coverage.info
+          flags: base
 
   clang:
     name: Clang
@@ -188,10 +187,9 @@ jobs:
           make check-code-coverage \
                 CODE_COVERAGE_LCOV_OPTIONS="${WTFOPTS}"
       - name: Upload coverage report
-        uses: actions/upload-artifact@v2
+        uses: codecov/codecov-action@v1
         with:
-          name: windows-coverage
-          path: efikit-*-coverage.info
+          flags: windows
 
   macos:
     name: MacOS
@@ -225,31 +223,6 @@ jobs:
           ./configure --enable-code-coverage
           make check-code-coverage CODE_COVERAGE_LIBS=
       - name: Upload coverage report
-        uses: actions/upload-artifact@v2
+        uses: codecov/codecov-action@v1
         with:
-          name: macos-coverage
-          path: efikit-*-coverage.info
-
-  coverage:
-    name: Coverage
-    needs:
-      - base
-      - windows
-      - macos
-    runs-on: ubuntu-latest
-    steps:
-      - name: Install packages
-        run: |
-          sudo apt update
-          sudo apt install -y -o Acquire::Retries=50 lcov
-      - name: Download artifacts
-        uses: actions/download-artifact@v2
-      - name: Merge reports
-        run: |
-          find . -name 'efikit-*-coverage.info' -exec echo -a {} \; | \
-            xargs lcov --rc lcov_branch_coverage=1 -o efikit-coverage.info
-      - name: Upload coverage report
-        uses: actions/upload-artifact@v2
-        with:
-          name: coverage
-          path: efikit-coverage.info
+          flags: macos
