@@ -101,6 +101,7 @@ int efivars_exists ( const char *name ) {
 #ifdef EFIVAR_WINDOWS
 
 #include <stdlib.h>
+#include <errno.h>
 #include <windows.h>
 
 /** Global variable GUID */
@@ -132,18 +133,25 @@ static int efivars_raise ( void ) {
 	privs.PrivilegeCount = 1;
 	privs.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
 	if ( ! LookupPrivilegeValue ( NULL, SE_SYSTEM_ENVIRONMENT_NAME,
-				      &privs.Privileges[0].Luid ) )
+				      &privs.Privileges[0].Luid ) ) {
+		errno = EPERM;
 		return 0;
+	}
 
 	/* Look up process token */
 	if ( ! OpenProcessToken ( GetCurrentProcess(),
 				  ( TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY ),
-				  &process ) )
+				  &process ) ) {
+		errno = EPERM;
 		return 0;
+	}
 
 	/* Obtain privilege */
-	if ( ! AdjustTokenPrivileges ( process, FALSE, &privs, 0, NULL, NULL ) )
+	if ( ! AdjustTokenPrivileges ( process, FALSE, &privs, 0, NULL,
+				       NULL ) ) {
+		errno = EPERM;
 		return 0;
+	}
 
 	/* Record as raised */
 	raised = 1;
@@ -165,8 +173,10 @@ int efivars_read ( const char *name, void **data, size_t *len ) {
 	/* Read variable */
 	*len = GetFirmwareEnvironmentVariableA ( name, efivars_global,
 						 *data, EFIVARS_MAX_LEN );
-	if ( ! *len )
+	if ( ! *len ) {
+		errno = ENOENT;
 		goto err_read;
+	}
 
 	return 1;
 
@@ -186,8 +196,10 @@ int efivars_write ( const char *name, const void *data, size_t len ) {
 
 	/* Write variable */
 	if ( ! SetFirmwareEnvironmentVariableA ( name, efivars_global,
-						 ( ( void * ) data ), len ) )
+						 ( ( void * ) data ), len ) ) {
+		errno = EACCES;
 		return 0;
+	}
 
 	return 1;
 }
@@ -217,10 +229,13 @@ int efivars_exists ( const char *name ) {
 
 #ifdef EFIVAR_DUMMY
 
+#include <errno.h>
+
 int efivars_read ( const char *name, void **data, size_t *len ) {
 	( void ) name;
 	( void ) data;
 	( void ) len;
+	errno = ENOTSUP;
 	return 0;
 }
 
@@ -228,6 +243,7 @@ int efivars_write ( const char *name, const void *data, size_t len ) {
 	( void ) name;
 	( void ) data;
 	( void ) len;
+	errno = ENOTSUP;
 	return 0;
 }
 

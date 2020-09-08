@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <errno.h>
 #include <Uefi/UefiBaseType.h>
 #include <Uefi/UefiSpec.h>
 #include <Library/BaseLib.h>
@@ -113,30 +114,40 @@ struct efi_boot_entry * efiboot_from_option ( const EFI_LOAD_OPTION *option,
 
 	/* Validate load option */
 	remaining = len;
-	if ( remaining < sizeof ( *option ) )
+	if ( remaining < sizeof ( *option ) ) {
+		errno = EINVAL;
 		goto err_sanity;
+	}
 	desc = ( ( ( void * ) option ) + sizeof ( *option ) );
 	remaining -= sizeof ( *option );
 	desclen = StrnSizeS ( desc, remaining );
-	if ( desclen > remaining )
+	if ( desclen > remaining ) {
+		errno = EINVAL;
 		goto err_sanity;
+	}
 	path = ( ( ( void * ) desc ) + desclen );
 	remaining -= desclen;
-	if ( option->FilePathListLength > remaining )
+	if ( option->FilePathListLength > remaining ) {
+		errno = EINVAL;
 		goto err_sanity;
+	}
 
 	/* Validate device path list and count device paths */
 	remaining = option->FilePathListLength;
 	count = 0;
 	while ( remaining ) {
-		if ( ! efidp_valid ( path, remaining ) )
+		if ( ! efidp_valid ( path, remaining ) ) {
+			errno = EINVAL;
 			goto err_sanity;
+		}
 		remaining -= efidp_len ( path );
 		path = ( ( ( void * ) path ) + efidp_len ( path ) );
 		count++;
 	}
-	if ( ! count )
+	if ( ! count ) {
+		errno = EINVAL;
 		goto err_sanity;
+	}
 
 	/* Allocate and initialise entry */
 	entry = malloc ( sizeof ( *entry ) );
@@ -278,8 +289,10 @@ int efiboot_set_type ( struct efi_boot_entry *entry,
 		       enum efi_boot_option_type type ) {
 
 	/* Sanity check */
-	if ( ( type < 0 ) || ( type > EFIBOOT_TYPE_MAX ) )
+	if ( ( type < 0 ) || ( type > EFIBOOT_TYPE_MAX ) ) {
+		errno = EINVAL;
 		return 0;
+	}
 
 	/* Set type */
 	entry->type = type;
@@ -309,8 +322,11 @@ unsigned int efiboot_index ( const struct efi_boot_entry *entry ) {
 int efiboot_set_index ( struct efi_boot_entry *entry, unsigned int index ) {
 
 	/* Sanity check */
-	if ( ( index > EFIBOOT_INDEX_MAX ) && ( index != EFIBOOT_INDEX_AUTO ) )
+	if ( ( index > EFIBOOT_INDEX_MAX ) &&
+	     ( index != EFIBOOT_INDEX_AUTO ) ) {
+		errno = EINVAL;
 		return 0;
+	}
 
 	/* Set index */
 	entry->index = index;
@@ -411,8 +427,10 @@ const EFI_DEVICE_PATH_PROTOCOL *
 efiboot_path ( const struct efi_boot_entry *entry, unsigned int index ) {
 
 	/* Sanity check */
-	if ( index >= entry->count )
+	if ( index >= entry->count ) {
+		errno = EINVAL;
 		return NULL;
+	}
 
 	return entry->paths[index].path;
 }
@@ -431,8 +449,10 @@ const char * efiboot_path_text ( const struct efi_boot_entry *entry,
 	struct efi_boot_entry_path *path;
 
 	/* Sanity check */
-	if ( index >= entry->count )
+	if ( index >= entry->count ) {
+		errno = EINVAL;
 		return NULL;
+	}
 
 	/* Create cached representation if needed */
 	path = &entry->paths[index];
@@ -458,8 +478,10 @@ int efiboot_set_paths ( struct efi_boot_entry *entry,
 	unsigned int i;
 
 	/* Sanity check */
-	if ( count < 1 )
+	if ( count < 1 ) {
+		errno = EINVAL;
 		return 0;
+	}
 
 	/* Copy device paths */
 	len = 0;
@@ -505,8 +527,10 @@ int efiboot_set_path ( struct efi_boot_entry *entry, unsigned int index,
 	unsigned int i;
 
 	/* Sanity check */
-	if ( index >= entry->count )
+	if ( index >= entry->count ) {
+		errno = EINVAL;
 		goto err_count;
+	}
 
 	/* Construct updated list of device paths */
 	paths = malloc ( entry->count * sizeof ( paths[0] ) );
@@ -670,10 +694,14 @@ static int efiboot_name ( enum efi_boot_option_type type, unsigned int index,
 			  char *buf ) {
 
 	/* Sanity checks */
-	if ( ( type < 0 ) || ( type > EFIBOOT_TYPE_MAX ) )
+	if ( ( type < 0 ) || ( type > EFIBOOT_TYPE_MAX ) ) {
+		errno = EINVAL;
 		return 0;
-	if ( index > EFIBOOT_INDEX_MAX )
+	}
+	if ( index > EFIBOOT_INDEX_MAX ) {
+		errno = EINVAL;
 		return 0;
+	}
 
 	/* Construct name */
 	snprintf ( buf, EFIBOOT_NAME_LEN, "%s%04x",
@@ -692,8 +720,10 @@ static int efiboot_name ( enum efi_boot_option_type type, unsigned int index,
 static int efiboot_order_name ( enum efi_boot_option_type type, char *buf ) {
 
 	/* Sanity checks */
-	if ( ( type < 0 ) || ( type > EFIBOOT_TYPE_MAX ) )
+	if ( ( type < 0 ) || ( type > EFIBOOT_TYPE_MAX ) ) {
+		errno = EINVAL;
 		return 0;
+	}
 
 	/* Construct name */
 	snprintf ( buf, EFIBOOT_NAME_LEN, "%sOrder", efiboot_prefix[type] );
@@ -729,6 +759,7 @@ static int efiboot_autoindex ( struct efi_boot_entry *entry ) {
 		return 1;
 	}
 
+	errno = ENOSPC;
 	return 0;
 }
 
@@ -927,8 +958,10 @@ int efiboot_save_all ( enum efi_boot_option_type type,
 
 	/* Save each individual entry */
 	for ( i = 0 ; i < count ; i++ ) {
-		if ( entries[i]->type != type )
+		if ( entries[i]->type != type ) {
+			errno = EINVAL;
 			goto err_type;
+		}
 		if ( ! efiboot_save ( entries[i] ) )
 			goto err_save;
 	}

@@ -25,7 +25,7 @@ int main ( void ) {
 	/* Fetch boot entries */
 	entries = efiboot_load_all ( EFIBOOT_TYPE_BOOT );
 	if ( ! entries ) {
-		fprintf ( stderr, "No boot entries\n" );
+		perror ( "No boot entries" );
 		exit ( EXIT_FAILURE );
 	}
 

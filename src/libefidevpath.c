@@ -10,6 +10,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdlib.h>
+#include <errno.h>
 #include <Uefi/UefiBaseType.h>
 #include <Protocol/DevicePath.h>
 #include <Protocol/DebugPort.h>
@@ -79,8 +80,10 @@ EFI_DEVICE_PATH_PROTOCOL * efidp_from_text ( const char *text ) {
 
 	/* Convert to EFI device path */
 	efidp = UefiDevicePathLibConvertTextToDevicePath ( efitext );
-	if ( ! efidp )
+	if ( ! efidp ) {
+		errno = EINVAL;
 		goto err_efidp;
+	}
 
 	/* Free EFI string */
 	free ( efitext );
@@ -116,8 +119,10 @@ char * efidp_to_text ( const EFI_DEVICE_PATH_PROTOCOL *path, bool display_only,
 	/* Convert to EFI string */
 	efitext = UefiDevicePathLibConvertDevicePathToText ( path, display_only,
 							     allow_shortcuts );
-	if ( ! efitext )
+	if ( ! efitext ) {
+		errno = EINVAL;
 		goto err_efitext;
+	}
 
 	/* Convert to UTF8 string */
 	text = efi_to_utf8 ( efitext );

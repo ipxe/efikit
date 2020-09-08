@@ -234,6 +234,10 @@ void test_badopt ( void **state ) {
 	/* Check that initial structure is OK */
 	assert_efiboot_option ( &test, &option.option, sizeof ( option ) );
 
+	/* Check that underlength option fails to parse */
+	assert_efiboot_from_option_fail ( &option.option, 0 );
+	assert_efiboot_from_option_fail ( &option.option, 3 );
+
 	/* Check that malformed FilePathListLength fails to parse */
 	option.option.FilePathListLength = ( sizeof ( option.path0 ) - 1 );
 	assert_efiboot_from_option_fail ( &option.option, sizeof ( option ) );
@@ -247,6 +251,9 @@ void test_badopt ( void **state ) {
 	assert_efiboot_option ( &test, &option.option, sizeof ( option ) );
 
 	/* Check that unterminated description fails to parse */
+	assert_efiboot_from_option_fail ( &option.option,
+					  offsetof ( typeof ( option ),
+						     description[4] ) );
 	option.description[10] = L'x';
 	assert_efiboot_from_option_fail ( &option.option, sizeof ( option ) );
 	option.description[10] = L'\0';
