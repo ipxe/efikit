@@ -1,0 +1,13 @@
+# While the project remains in early development, prevent missing test
+# coverage from causing a failure status.
+#
+coverage:
+  status:
+    project:
+      default:
+        target: 0%
+        threshold: 100%
+    patch:
+      default:
+        target: 0%
+        threshold: 100%
