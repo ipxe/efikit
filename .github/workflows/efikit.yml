@@ -178,7 +178,15 @@ jobs:
         run: |
           make clean
           ./configure --enable-code-coverage
-          make check-code-coverage GENHTML=#skip-genhtml
+          CWD=$(pwd)/
+          DRIVE=${CWD:1:1}:
+          DRIVE=${DRIVE^^}
+          NONDRIVE=${CWD:2}
+          WTF=${DRIVE}${NONDRIVE//\//\\n}
+          WTFOPTS="--rc geninfo_adjust_src_path='${WTF} => ${CWD}'"
+          echo "Hacking ${WTFOPTS}"
+          make check-code-coverage \
+                CODE_COVERAGE_LCOV_OPTIONS="${WTFOPTS}"
       - name: Upload coverage report
         uses: actions/upload-artifact@v2
         with:
