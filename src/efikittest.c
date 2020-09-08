@@ -12,11 +12,13 @@
 #include <setjmp.h>
 #include <cmocka.h>
 
+#include "memalloctest.h"
 #include "efidevpathtest.h"
 #include "efibootdevtest.h"
 
 /** Tests */
 static const struct CMUnitTest tests[] = {
+	cmocka_unit_test ( test_memalloc ),
 	cmocka_unit_test ( test_hddpath ),
 	cmocka_unit_test ( test_macpath ),
 	cmocka_unit_test ( test_uripath ),

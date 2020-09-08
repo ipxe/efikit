@@ -76,6 +76,8 @@ libefikit_la_LIBADD = \
 
 efikittest_SOURCES = \
 	efikittest.c \
+	memalloctest.c \
+	memalloctest.h \
 	efibootdevtest.c \
 	efibootdevtest.h \
 	efidevpathtest.c \
@@ -92,6 +94,11 @@ efikittest_CFLAGS = \
 	$(AM_CFLAGS)
 
 efikittest_LDADD = \
+	libcommon.la \
+	libmdebase.la \
+	libmdebasememory.la \
+	libmdebase.la \
+	libmdebasedebugnull.la \
 	libefikit.la \
 	$(CMOCKA_LIBS) \
 	$(CODE_COVERAGE_LIBS)
