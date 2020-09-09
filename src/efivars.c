@@ -153,6 +153,12 @@ static int efivars_raise ( void ) {
 		return 0;
 	}
 
+	/* Check that privilege was actually assigned */
+	if ( GetLastError() != ERROR_SUCCESS ) {
+		errno = EPERM;
+		return 0;
+	}
+
 	/* Record as raised */
 	raised = 1;
 
