@@ -180,7 +180,14 @@ int efivars_read ( const char *name, void **data, size_t *len ) {
 	*len = GetFirmwareEnvironmentVariableA ( name, efivars_global,
 						 *data, EFIVARS_MAX_LEN );
 	if ( ! *len ) {
-		errno = ENOENT;
+		switch ( GetLastError() ) {
+		case ERROR_INVALID_FUNCTION:
+			errno = ENOSYS;
+			break;
+		default:
+			errno = ENOENT;
+			break;
+		}
 		goto err_read;
 	}
 
