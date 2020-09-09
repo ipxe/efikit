@@ -704,7 +704,7 @@ static int efiboot_name ( enum efi_boot_option_type type, unsigned int index,
 	}
 
 	/* Construct name */
-	snprintf ( buf, EFIBOOT_NAME_LEN, "%s%04x",
+	snprintf ( buf, EFIBOOT_NAME_LEN, "%s%04X",
 		   efiboot_prefix[type], index );
 
 	return 1;
