@@ -31,7 +31,8 @@ int main ( void ) {
 
 	/* Dump each entry */
 	for ( i = 0 ; entries[i] ; i++ ) {
-		printf ( "%s:", efiboot_description ( entries[i] ) );
+		printf ( "%s \"%s\"", efiboot_name ( entries[i] ),
+			 efiboot_description ( entries[i] ) );
 		count = efiboot_path_count ( entries[i] );
 		for ( j = 0 ; j < count ; j++ )
 			printf ( " %s", efiboot_path_text ( entries[i], j ) );

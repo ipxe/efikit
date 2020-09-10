@@ -340,3 +340,31 @@ void test_fedoraopt ( void **state ) {
 	assert_efiboot_option ( &test, ( EFI_LOAD_OPTION * ) option,
 				sizeof ( option ) );
 }
+
+/** Test variable naming */
+void test_varname ( void **state ) {
+	static EFI_DEVICE_PATH_PROTOCOL path = EFIDP_END;
+	static EFI_DEVICE_PATH_PROTOCOL *paths[] = { &path };
+	struct efi_boot_entry *entry;
+
+	( void ) state;
+	entry = efiboot_new ( EFIBOOT_TYPE_BOOT, 0x0c42, 0, "Test entry",
+			      paths, 1, NULL, 0 );
+	assert_non_null ( entry );
+	assert_string_equal ( efiboot_name ( entry ), "Boot0C42" );
+	assert_false ( efiboot_set_type ( entry, 999 ) );
+	assert_int_equal ( efiboot_type ( entry ), EFIBOOT_TYPE_BOOT );
+	assert_true ( efiboot_set_type ( entry, EFIBOOT_TYPE_SYSPREP ) );
+	assert_int_equal ( efiboot_type ( entry ), EFIBOOT_TYPE_SYSPREP );
+	assert_string_equal ( efiboot_name ( entry ), "SysPrep0C42" );
+	assert_true ( efiboot_set_index ( entry, 0x1234 ) );
+	assert_int_equal ( efiboot_index ( entry ), 0x1234 );
+	assert_string_equal ( efiboot_name ( entry ), "SysPrep1234" );
+	assert_false ( efiboot_set_index ( entry, 0x10000 ) );
+	assert_int_equal ( efiboot_index ( entry ), 0x1234 );
+	assert_string_equal ( efiboot_name ( entry ), "SysPrep1234" );
+	assert_true ( efiboot_set_index ( entry, EFIBOOT_INDEX_AUTO ) );
+	assert_int_equal ( efiboot_index ( entry ), EFIBOOT_INDEX_AUTO );
+	assert_null ( efiboot_name ( entry ) );
+	efiboot_free ( entry );
+}

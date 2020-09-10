@@ -61,6 +61,8 @@ struct efi_boot_entry {
 	void *data;
 	/** Length of optional data */
 	size_t len;
+	/** Variable name */
+	char name[EFIBOOT_NAME_LEN];
 };
 
 /**
@@ -269,6 +271,107 @@ EFI_LOAD_OPTION * efiboot_to_option ( const struct efi_boot_entry *entry,
 }
 
 /**
+ * Construct EFI variable name
+ *
+ * @v type		Load option type
+ * @v index		Load option index
+ * @v buf		Variable name buffer
+ * @ret ok		Success indicator
+ */
+static int efiboot_index_name ( enum efi_boot_option_type type,
+				unsigned int index, char *buf ) {
+
+	/* Sanity checks */
+	if ( ( type < 0 ) || ( type > EFIBOOT_TYPE_MAX ) ) {
+		errno = EINVAL;
+		return 0;
+	}
+	if ( index > EFIBOOT_INDEX_MAX ) {
+		errno = EINVAL;
+		return 0;
+	}
+
+	/* Construct name */
+	snprintf ( buf, EFIBOOT_NAME_LEN, "%s%04X",
+		   efiboot_prefix[type], index );
+
+	return 1;
+}
+
+/**
+ * Construct EFI order variable name
+ *
+ * @v type		Load option type
+ * @v buf		Variable name buffer
+ * @ret ok		Success indicator
+ */
+static int efiboot_order_name ( enum efi_boot_option_type type, char *buf ) {
+
+	/* Sanity checks */
+	if ( ( type < 0 ) || ( type > EFIBOOT_TYPE_MAX ) ) {
+		errno = EINVAL;
+		return 0;
+	}
+
+	/* Construct name */
+	snprintf ( buf, EFIBOOT_NAME_LEN, "%sOrder", efiboot_prefix[type] );
+
+	return 1;
+}
+
+/**
+ * Set load option type and index
+ *
+ * @v entry		EFI boot entry
+ * @v type		Load option type
+ * @v index		Index
+ * @ret ok		Success indicator
+ */
+static int efiboot_set_type_index ( struct efi_boot_entry *entry,
+				    enum efi_boot_option_type type,
+				    unsigned int index ) {
+
+	/* Sanity checks */
+	if ( ( type < 0 ) || ( type > EFIBOOT_TYPE_MAX ) ) {
+		errno = EINVAL;
+		return 0;
+	}
+	if ( ( index > EFIBOOT_INDEX_MAX ) &&
+	     ( index != EFIBOOT_INDEX_AUTO ) ) {
+		errno = EINVAL;
+		return 0;
+	}
+
+	/* Set type */
+	entry->type = type;
+
+	/* Set index */
+	entry->index = index;
+
+	/* Update variable name */
+	if ( ! efiboot_index_name ( type, index, entry->name ) )
+		entry->name[0] = '\0';
+
+	/* Mark as modified */
+	entry->modified = true;
+
+	return 1;
+}
+
+/**
+ * Get variable name
+ *
+ * @v entry		EFI boot entry
+ * @ret name		Variable name (or NULL on error)
+ *
+ * Note that a boot entry for which an index has not yet been assigned
+ * will not have a variable name.
+ */
+const char * efiboot_name ( const struct efi_boot_entry *entry ) {
+	return ( entry->name[0] ? entry->name : NULL );
+}
+
+/**
  * Get load option type
  *
  * @v entry		EFI boot entry
@@ -287,20 +390,7 @@ enum efi_boot_option_type efiboot_type ( const struct efi_boot_entry *entry ) {
  */
 int efiboot_set_type ( struct efi_boot_entry *entry,
 		       enum efi_boot_option_type type ) {
-
-	/* Sanity check */
-	if ( ( type < 0 ) || ( type > EFIBOOT_TYPE_MAX ) ) {
-		errno = EINVAL;
-		return 0;
-	}
-
-	/* Set type */
-	entry->type = type;
-
-	/* Mark as modified */
-	entry->modified = true;
-
-	return 1;
+	return efiboot_set_type_index ( entry, type, entry->index );
 }
 
 /**
@@ -320,21 +410,7 @@ unsigned int efiboot_index ( const struct efi_boot_entry *entry ) {
  * @v index		Index (or @c EFIBOOT_INDEX_AUTO)
  */
 int efiboot_set_index ( struct efi_boot_entry *entry, unsigned int index ) {
-
-	/* Sanity check */
-	if ( ( index > EFIBOOT_INDEX_MAX ) &&
-	     ( index != EFIBOOT_INDEX_AUTO ) ) {
-		errno = EINVAL;
-		return 0;
-	}
-
-	/* Set index */
-	entry->index = index;
-
-	/* Mark as modified */
-	entry->modified = true;
-
-	return 1;
+	return efiboot_set_type_index ( entry, entry->type, index );
 }
 
 /**
@@ -683,55 +759,6 @@ struct efi_boot_entry * efiboot_new ( enum efi_boot_option_type type,
 }
 
 /**
- * Construct EFI variable name
- *
- * @v type		Load option type
- * @v index		Load option index
- * @v buf		Variable name buffer
- * @ret ok		Success indicator
- */
-static int efiboot_name ( enum efi_boot_option_type type, unsigned int index,
-			  char *buf ) {
-
-	/* Sanity checks */
-	if ( ( type < 0 ) || ( type > EFIBOOT_TYPE_MAX ) ) {
-		errno = EINVAL;
-		return 0;
-	}
-	if ( index > EFIBOOT_INDEX_MAX ) {
-		errno = EINVAL;
-		return 0;
-	}
-
-	/* Construct name */
-	snprintf ( buf, EFIBOOT_NAME_LEN, "%s%04X",
-		   efiboot_prefix[type], index );
-
-	return 1;
-}
-
-/**
- * Construct EFI order variable name
- *
- * @v type		Load option type
- * @v buf		Variable name buffer
- * @ret ok		Success indicator
- */
-static int efiboot_order_name ( enum efi_boot_option_type type, char *buf ) {
-
-	/* Sanity checks */
-	if ( ( type < 0 ) || ( type > EFIBOOT_TYPE_MAX ) ) {
-		errno = EINVAL;
-		return 0;
-	}
-
-	/* Construct name */
-	snprintf ( buf, EFIBOOT_NAME_LEN, "%sOrder", efiboot_prefix[type] );
-
-	return 1;
-}
-
-/**
  * Automatically assign EFI variable index
  *
  * @v entry		EFI boot entry
@@ -745,7 +772,7 @@ static int efiboot_autoindex ( struct efi_boot_entry *entry ) {
 	for ( index = 0 ; index <= EFIBOOT_INDEX_MAX ; index++ ) {
 
 		/* Skip if already in use */
-		if ( ! efiboot_name ( entry->type, index, name ) )
+		if ( ! efiboot_index_name ( entry->type, index, name ) )
 			continue;
 		if ( efivars_exists ( name ) )
 			continue;
@@ -782,7 +809,7 @@ struct efi_boot_entry * efiboot_load ( enum efi_boot_option_type type,
 	size_t len;
 
 	/* Construct variable name */
-	if ( ! efiboot_name ( type, index, name ) )
+	if ( ! efiboot_index_name ( type, index, name ) )
 		goto err_name;
 
 	/* Read variable data */
@@ -794,9 +821,10 @@ struct efi_boot_entry * efiboot_load ( enum efi_boot_option_type type,
 	if ( ! entry )
 		goto err_from_option;
 
-	/* Record type and index */
+	/* Record type, index, and variable name */
 	entry->type = type;
 	entry->index = index;
+	memcpy ( entry->name, name, sizeof ( entry->name ) );
 
 	/* Free variable data */
 	free ( data );
@@ -820,7 +848,6 @@ struct efi_boot_entry * efiboot_load ( enum efi_boot_option_type type,
  * updated to reflect the automatically selected index.
  */
 int efiboot_save ( struct efi_boot_entry *entry ) {
-	char name[EFIBOOT_NAME_LEN];
 	EFI_LOAD_OPTION *option;
 	size_t len;
 
@@ -834,17 +861,13 @@ int efiboot_save ( struct efi_boot_entry *entry ) {
 			goto err_autoindex;
 	}
 
-	/* Construct variable name */
-	if ( ! efiboot_name ( entry->type, entry->index, name ) )
-		goto err_name;
-
 	/* Construct load option */
 	option = efiboot_to_option ( entry, &len );
 	if ( ! option )
 		goto err_to_option;
 
 	/* Write variable data */
-	if ( ! efivars_write ( name, option, len ) )
+	if ( ! efivars_write ( efiboot_name ( entry ), option, len ) )
 		goto err_write;
 
 	/* Free load option */
@@ -858,7 +881,6 @@ int efiboot_save ( struct efi_boot_entry *entry ) {
  err_write:
 	free ( option );
  err_to_option:
- err_name:
  err_autoindex:
 	return 0;
 }

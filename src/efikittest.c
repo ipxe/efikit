@@ -28,6 +28,7 @@ static const struct CMUnitTest tests[] = {
 	cmocka_unit_test ( test_badopt ),
 	cmocka_unit_test ( test_shellopt ),
 	cmocka_unit_test ( test_fedoraopt ),
+	cmocka_unit_test ( test_varname ),
 };
 
 /**

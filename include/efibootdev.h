@@ -41,6 +41,7 @@ extern struct efi_boot_entry *
 efiboot_from_option ( const EFI_LOAD_OPTION *option, size_t len );
 extern EFI_LOAD_OPTION * efiboot_to_option ( const struct efi_boot_entry *entry,
 					     size_t *len );
+extern const char * efiboot_name ( const struct efi_boot_entry *entry );
 extern enum efi_boot_option_type
 efiboot_type ( const struct efi_boot_entry *entry );
 extern int efiboot_set_type ( struct efi_boot_entry *entry,
