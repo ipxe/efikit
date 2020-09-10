@@ -13,6 +13,9 @@
 #include <glib.h>
 #include <efibootdev.h>
 
+/** Load option type */
+static enum efi_boot_option_type option_type = EFIBOOT_TYPE_BOOT;
+
 /** Show variable name */
 static gboolean show_name = FALSE;
 
@@ -31,8 +34,44 @@ static gboolean show_paths = FALSE;
 /** Show additional data */
 static gboolean show_data = FALSE;
 
+/**
+ * Parse load option type
+ *
+ * @v name		Option name
+ * @v value		Option value
+ * @v data		Opaque data
+ * @v error		Error to fill in
+ * @ret ok		Success indicator
+ */
+static gboolean parse_type ( const gchar *name, const gchar *value,
+			     gpointer data, GError **error ) {
+	static const char *types[EFIBOOT_TYPE_MAX + 1] = {
+		[EFIBOOT_TYPE_BOOT] = "boot",
+		[EFIBOOT_TYPE_DRIVER] = "driver",
+		[EFIBOOT_TYPE_SYSPREP] = "sysprep",
+	};
+	unsigned int i;
+
+	( void ) name;
+	( void ) data;
+
+	/* Find type by name */
+	for ( i = 0 ; i <= EFIBOOT_TYPE_MAX ; i++ ) {
+		if ( types[i] && ( strcasecmp ( value, types[i] ) == 0 ) ) {
+			option_type = i;
+			return TRUE;
+		}
+	}
+
+	g_set_error ( error, G_OPTION_ERROR, G_OPTION_ERROR_BAD_VALUE,
+		      "Unknown type \"%s\"", value );
+	return FALSE;
+}
+
 /** Command-line options */
 static GOptionEntry options[] = {
+	{ "type", 't', 0, G_OPTION_ARG_CALLBACK, parse_type,
+	  "Load option type", "boot|driver|sysprep" },
 	{ "name", 'n', 0, G_OPTION_ARG_NONE, &show_name,
 	  "Show variable name", NULL },
 	{ "attributes", 'a', 0, G_OPTION_ARG_NONE, &show_attributes,
@@ -117,7 +156,7 @@ int main ( int argc, char **argv ) {
 	unsigned int i;
 
 	/* Parse command-line options */
-	context = g_option_context_new ( " - Dump EFI boot devices" );
+	context = g_option_context_new ( " - Dump EFI boot entries" );
 	g_option_context_add_main_entries ( context, options, NULL );
 	if ( ! g_option_context_parse ( context, &argc, &argv, &error ) ) {
 		g_printerr ( "Could not parse options: %s\n", error->message );
@@ -129,9 +168,9 @@ int main ( int argc, char **argv ) {
 	}
 
 	/* Fetch boot entries */
-	entries = efiboot_load_all ( EFIBOOT_TYPE_BOOT );
+	entries = efiboot_load_all ( option_type );
 	if ( ! entries ) {
-		perror ( "No boot entries" );
+		perror ( "No entries found" );
 		exit ( EXIT_FAILURE );
 	}
 
