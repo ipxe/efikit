@@ -123,8 +123,13 @@ efidevpath_LDADD = \
 #
 ###############################################################################
 
+efibootdump_CPPFLAGS = \
+	$(GLIB_CFLAGS) \
+	$(AM_CPPFLAGS)
+
 efibootdump_LDADD = \
-	libefikit.la
+	libefikit.la \
+	$(GLIB_LIBS)
 
 ###############################################################################
 #
