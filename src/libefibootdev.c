@@ -920,9 +920,17 @@ struct efi_boot_entry ** efiboot_load_all ( enum efi_boot_option_type type ) {
 	if ( ! efiboot_order_name ( type, name ) )
 		goto err_name;
 
-	/* Read order variable */
-	if ( ! efivars_read ( name, &data, &len ) )
-		goto err_read;
+	/* Read order variable
+	 *
+	 * Zero-length variables are not supported.  Treat a missing
+	 * order variable as equivalent to an empty list.
+	 */
+	if ( ! efivars_read ( name, &data, &len ) ) {
+		if ( errno != ENOENT )
+			goto err_read;
+		data = NULL;
+		len = 0;
+	}
 
 	/* Allocate list of entries */
 	index = data;
