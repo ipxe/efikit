@@ -24,7 +24,7 @@ struct efi_boot_entry;
 
 /** EFI boot load option types */
 enum efi_boot_option_type {
-	EFIBOOT_TYPE_BOOT = 0,
+	EFIBOOT_TYPE_BOOT = 1,
 	EFIBOOT_TYPE_DRIVER,
 	EFIBOOT_TYPE_SYSPREP,
 	EFIBOOT_TYPE_MAX = EFIBOOT_TYPE_SYSPREP
@@ -41,6 +41,8 @@ extern struct efi_boot_entry *
 efiboot_from_option ( const EFI_LOAD_OPTION *option, size_t len );
 extern EFI_LOAD_OPTION * efiboot_to_option ( const struct efi_boot_entry *entry,
 					     size_t *len );
+extern const char * efiboot_type_name ( enum efi_boot_option_type type );
+extern enum efi_boot_option_type efiboot_named_type ( const char *name );
 extern const char * efiboot_name ( const struct efi_boot_entry *entry );
 extern enum efi_boot_option_type
 efiboot_type ( const struct efi_boot_entry *entry );

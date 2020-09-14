@@ -22,8 +22,8 @@
 #include "strconvert.h"
 #include "efivars.h"
 
-/** Boot variable name prefixes */
-static const char *efiboot_prefix[] = {
+/** Load option type names */
+static const char *efiboot_type_names[] = {
 	[EFIBOOT_TYPE_BOOT] = "Boot",
 	[EFIBOOT_TYPE_DRIVER] = "Driver",
 	[EFIBOOT_TYPE_SYSPREP] = "SysPrep",
@@ -271,6 +271,43 @@ EFI_LOAD_OPTION * efiboot_to_option ( const struct efi_boot_entry *entry,
 }
 
 /**
+ * Get EFI variable type name
+ *
+ * @v type		Load option type
+ * @ret name		Type name, or NULL on error
+ */
+const char * efiboot_type_name ( enum efi_boot_option_type type ) {
+
+	/* Sanity check */
+	if ( ( type <= 0 ) || ( type > EFIBOOT_TYPE_MAX ) ) {
+		errno = EINVAL;
+		return NULL;
+	}
+
+	return efiboot_type_names[type];
+}
+
+/**
+ * Get EFI load option type from type name
+ *
+ * @v name		Type name (case insensitive)
+ * @ret type		Load option type, or 0 on error
+ */
+enum efi_boot_option_type efiboot_named_type ( const char *name ) {
+	unsigned int i;
+
+	/* Find type by name */
+	for ( i = 1 ; i <= EFIBOOT_TYPE_MAX ; i++ ) {
+		if ( efiboot_type_names[i] &&
+		     ( strcasecmp ( name, efiboot_type_names[i] ) == 0 ) ) {
+			return i;
+		}
+	}
+
+	return 0;
+}
+
+/**
  * Construct EFI variable name
  *
  * @v type		Load option type
@@ -280,20 +317,21 @@ EFI_LOAD_OPTION * efiboot_to_option ( const struct efi_boot_entry *entry,
  */
 static int efiboot_index_name ( enum efi_boot_option_type type,
 				unsigned int index, char *buf ) {
+	const char *prefix;
 
 	/* Sanity checks */
-	if ( ( type < 0 ) || ( type > EFIBOOT_TYPE_MAX ) ) {
-		errno = EINVAL;
-		return 0;
-	}
 	if ( index > EFIBOOT_INDEX_MAX ) {
 		errno = EINVAL;
 		return 0;
 	}
 
+	/* Get variable name prefix */
+	prefix = efiboot_type_name ( type );
+	if ( ! prefix )
+		return 0;
+
 	/* Construct name */
-	snprintf ( buf, EFIBOOT_NAME_LEN, "%s%04X",
-		   efiboot_prefix[type], index );
+	snprintf ( buf, EFIBOOT_NAME_LEN, "%s%04X", prefix, index );
 
 	return 1;
 }
@@ -306,15 +344,15 @@ static int efiboot_index_name ( enum efi_boot_option_type type,
  * @ret ok		Success indicator
  */
 static int efiboot_order_name ( enum efi_boot_option_type type, char *buf ) {
+	const char *prefix;
 
-	/* Sanity checks */
-	if ( ( type < 0 ) || ( type > EFIBOOT_TYPE_MAX ) ) {
-		errno = EINVAL;
+	/* Get variable name prefix */
+	prefix = efiboot_type_name ( type );
+	if ( ! prefix )
 		return 0;
-	}
 
 	/* Construct name */
-	snprintf ( buf, EFIBOOT_NAME_LEN, "%sOrder", efiboot_prefix[type] );
+	snprintf ( buf, EFIBOOT_NAME_LEN, "%sOrder", prefix );
 
 	return 1;
 }
@@ -332,7 +370,7 @@ static int efiboot_set_type_index ( struct efi_boot_entry *entry,
 				    unsigned int index ) {
 
 	/* Sanity checks */
-	if ( ( type < 0 ) || ( type > EFIBOOT_TYPE_MAX ) ) {
+	if ( ( type <= 0 ) || ( type > EFIBOOT_TYPE_MAX ) ) {
 		errno = EINVAL;
 		return 0;
 	}

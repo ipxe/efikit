@@ -14,6 +14,7 @@ extern void test_hddopt ( void **state );
 extern void test_badopt ( void **state );
 extern void test_shellopt ( void **state );
 extern void test_fedoraopt ( void **state );
+extern void test_typename ( void **state );
 extern void test_varname ( void **state );
 
 #endif /* _EFIBOOTDEVTEST_H */

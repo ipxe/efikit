@@ -45,27 +45,19 @@ static gboolean show_data = FALSE;
  */
 static gboolean parse_type ( const gchar *name, const gchar *value,
 			     gpointer data, GError **error ) {
-	static const char *types[EFIBOOT_TYPE_MAX + 1] = {
-		[EFIBOOT_TYPE_BOOT] = "boot",
-		[EFIBOOT_TYPE_DRIVER] = "driver",
-		[EFIBOOT_TYPE_SYSPREP] = "sysprep",
-	};
-	unsigned int i;
 
 	( void ) name;
 	( void ) data;
 
 	/* Find type by name */
-	for ( i = 0 ; i <= EFIBOOT_TYPE_MAX ; i++ ) {
-		if ( types[i] && ( strcasecmp ( value, types[i] ) == 0 ) ) {
-			option_type = i;
-			return TRUE;
-		}
+	option_type = efiboot_named_type ( value );
+	if ( ! option_type ) {
+		g_set_error ( error, G_OPTION_ERROR, G_OPTION_ERROR_BAD_VALUE,
+			      "Unknown type \"%s\"", value );
+		return FALSE;
 	}
 
-	g_set_error ( error, G_OPTION_ERROR, G_OPTION_ERROR_BAD_VALUE,
-		      "Unknown type \"%s\"", value );
-	return FALSE;
+	return TRUE;
 }
 
 /** Command-line options */

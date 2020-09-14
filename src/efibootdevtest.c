@@ -343,6 +343,26 @@ void test_fedoraopt ( void **state ) {
 				sizeof ( option ) );
 }
 
+/** Test type naming */
+void test_typename ( void **state ) {
+
+	( void ) state;
+	assert_string_equal ( efiboot_type_name ( EFIBOOT_TYPE_BOOT ),
+			      "Boot" );
+	assert_string_equal ( efiboot_type_name ( EFIBOOT_TYPE_DRIVER ),
+			      "Driver" );
+	assert_string_equal ( efiboot_type_name ( EFIBOOT_TYPE_SYSPREP ),
+			      "SysPrep" );
+	assert_int_equal ( efiboot_named_type ( "Boot" ), EFIBOOT_TYPE_BOOT );
+	assert_int_equal ( efiboot_named_type ( "boot" ), EFIBOOT_TYPE_BOOT );
+	assert_int_equal ( efiboot_named_type ( "BOOT" ), EFIBOOT_TYPE_BOOT );
+	assert_int_equal ( efiboot_named_type ( "driver" ),
+			   EFIBOOT_TYPE_DRIVER );
+	assert_int_equal ( efiboot_named_type ( "Sysprep" ),
+			   EFIBOOT_TYPE_SYSPREP );
+	assert_int_equal ( efiboot_named_type ( "unknown" ), 0 );
+}
+
 /** Test variable naming */
 void test_varname ( void **state ) {
 	struct efi_boot_entry *entry;
