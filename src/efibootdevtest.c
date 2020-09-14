@@ -84,10 +84,12 @@ static void assert_efiboot_to_option ( const struct efi_boot_entry_test *test,
 	}
 
 	/* Construct boot entry */
-	entry = efiboot_new ( EFIBOOT_TYPE_BOOT, EFIBOOT_INDEX_AUTO,
-			      test->attributes, test->description, paths,
-			      test->count, test->data, test->len );
+	entry = efiboot_new ();
 	assert_non_null ( entry );
+	assert_true ( efiboot_set_attributes ( entry, test->attributes ) );
+	assert_true ( efiboot_set_description ( entry, test->description ) );
+	assert_true ( efiboot_set_paths ( entry, paths, test->count ) );
+	assert_true ( efiboot_set_data ( entry, test->data, test->len ) );
 	assert_efiboot_entry ( entry, test );
 
 	/* Construct load option */
@@ -343,13 +345,11 @@ void test_fedoraopt ( void **state ) {
 
 /** Test variable naming */
 void test_varname ( void **state ) {
-	static EFI_DEVICE_PATH_PROTOCOL path = EFIDP_END;
-	static EFI_DEVICE_PATH_PROTOCOL *paths[] = { &path };
 	struct efi_boot_entry *entry;
 
 	( void ) state;
-	entry = efiboot_new ( EFIBOOT_TYPE_BOOT, 0x0c42, 0, "Test entry",
-			      paths, 1, NULL, 0 );
+	entry = efiboot_new();
+	assert_true ( efiboot_set_index ( entry, 0x0c42 ) );
 	assert_non_null ( entry );
 	assert_string_equal ( efiboot_name ( entry ), "Boot0C42" );
 	assert_false ( efiboot_set_type ( entry, 999 ) );

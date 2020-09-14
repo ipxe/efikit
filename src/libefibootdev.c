@@ -694,25 +694,14 @@ void efiboot_clear_data ( struct efi_boot_entry *entry ) {
 }
 
 /**
- * Create EFI boot entry
+ * Create new EFI boot entry
  *
- * @v type		Load option type
- * @v index		Index (or @c EFIBOOT_INDEX_AUTO)
- * @v attributes	Attributes
- * @v description	Description (as UTF8 string)
- * @v paths		Device paths
- * @v count		Number of device paths (must be at least 1)
- * @v data		Optional data (NULL if no optional data)
- * @v len		Length of optional data (0 if no optional data)
  * @ret entry		EFI boot entry, or NULL on error
  */
-struct efi_boot_entry * efiboot_new ( enum efi_boot_option_type type,
-				      unsigned int index, uint32_t attributes,
-				      const char *description,
-				      EFI_DEVICE_PATH_PROTOCOL **paths,
-				      unsigned int count, const void *data,
-				      size_t len ) {
+struct efi_boot_entry * efiboot_new ( void ) {
 	struct efi_boot_entry *entry;
+	static EFI_DEVICE_PATH_PROTOCOL path = EFIDP_END;
+	static EFI_DEVICE_PATH_PROTOCOL *paths[] = { &path };
 
 	/* Allocate entry */
 	entry = malloc ( sizeof ( *entry ) );
@@ -720,39 +709,22 @@ struct efi_boot_entry * efiboot_new ( enum efi_boot_option_type type,
 		goto err_alloc;
 	memset ( entry, 0, sizeof ( *entry ) );
 	entry->modified = true;
-
-	/* Set type */
-	if ( ! efiboot_set_type ( entry, type ) )
-		goto err_type;
-
-	/* Set index */
-	if ( ! efiboot_set_index ( entry, index ) )
-		goto err_index;
-
-	/* Set attributes */
-	if ( ! efiboot_set_attributes ( entry, attributes ) )
-		goto err_attributes;
+	entry->type = EFIBOOT_TYPE_BOOT;
+	entry->index = EFIBOOT_INDEX_AUTO;
+	entry->attributes = LOAD_OPTION_ACTIVE;
 
 	/* Set description */
-	if ( ! efiboot_set_description ( entry, description ) )
+	if ( ! efiboot_set_description ( entry, "Unknown" ) )
 		goto err_description;
 
 	/* Set device paths */
-	if ( ! efiboot_set_paths ( entry, paths, count ) )
+	if ( ! efiboot_set_paths ( entry, paths, 1 ) )
 		goto err_paths;
-
-	/* Set optional data */
-	if ( ! efiboot_set_data ( entry, data, len ) )
-		goto err_data;
 
 	return entry;
 
- err_data:
  err_paths:
  err_description:
- err_attributes:
- err_index:
- err_type:
 	efiboot_free ( entry );
  err_alloc:
 	return NULL;

@@ -70,11 +70,7 @@ extern size_t efiboot_data_len ( const struct efi_boot_entry *entry );
 extern int efiboot_set_data ( struct efi_boot_entry *entry, const void *data,
 			      size_t len );
 extern void efiboot_clear_data ( struct efi_boot_entry *entry );
-extern struct efi_boot_entry *
-efiboot_new ( enum efi_boot_option_type type, unsigned int index,
-	      uint32_t attributes, const char *description,
-	      EFI_DEVICE_PATH_PROTOCOL **paths, unsigned int count,
-	      const void *data, size_t len );
+extern struct efi_boot_entry * efiboot_new ( void );
 extern struct efi_boot_entry * efiboot_load ( enum efi_boot_option_type type,
 					      unsigned int index );
 extern int efiboot_save ( struct efi_boot_entry *entry );
