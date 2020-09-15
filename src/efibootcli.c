@@ -129,6 +129,25 @@ static int parse_position ( const char *arg ) {
 }
 
 /**
+ * Parse boot identifier argument
+ *
+ * @v text		Boot identifier argument
+ * @ret pos		Boot order position, or negative on error
+ */
+static int parse_id ( const char *arg ) {
+	int pos;
+
+	/* Try matching against variable names */
+	for ( pos = 0 ; pos < ( ( int ) entry_count ) ; pos++ ) {
+		if ( strcasecmp ( arg, efiboot_name ( entries[pos] ) ) == 0 )
+			return pos;
+	}
+
+	/* Try parsing as boot order position */
+	return parse_position ( arg );
+}
+
+/**
  * Show boot entry properties
  *
  * @v pos		Boot order position
@@ -336,8 +355,8 @@ static int efibootshow_exec ( int argc, char **argv ) {
 		/* Show specified entries */
 		for ( argv++, argc-- ; argc ; argv++, argc-- ) {
 
-			/* Parse position */
-			pos = parse_position ( *argv );
+			/* Parse entry ID */
+			pos = parse_id ( *argv );
 			if ( pos < 0 )
 				return 0;
 
@@ -372,7 +391,7 @@ static GOptionEntry efibootshow_options[] = {
 
 /** "efibootshow" subcommand */
 struct efi_boot_command efibootshow = {
-	.description = "[<position>...] - Show EFI boot entries",
+	.description = "[<position>|<name>...] - Show EFI boot entries",
 	.options = efibootshow_options,
 	.exec = efibootshow_exec,
 };
@@ -389,14 +408,14 @@ static int efibootmod_exec ( int argc, char **argv ) {
 
 	/* Identify entry */
 	if ( argc < 2 ) {
-		fprintf ( stderr, "Missing position argument\n" );
+		fprintf ( stderr, "Missing argument\n" );
 		return 0;
 	}
 	if ( argc > 2 ) {
 		fprintf ( stderr, "Too many arguments\n" );
 		return 0;
 	}
-	pos = parse_position ( argv[1] );
+	pos = parse_id ( argv[1] );
 	if ( pos < 0 )
 		return 0;
 
@@ -426,7 +445,7 @@ static GOptionEntry efibootmod_options[] = {
 
 /** "efibootmod" subcommand */
 struct efi_boot_command efibootmod = {
-	.description = "<position> - Modify EFI boot entry",
+	.description = "<position>|<name> - Modify EFI boot entry",
 	.options = efibootmod_options,
 	.exec = efibootmod_exec,
 };
@@ -526,14 +545,14 @@ static int efibootdel_exec ( int argc, char **argv ) {
 
 	/* Identify entry */
 	if ( argc < 2 ) {
-		fprintf ( stderr, "Missing position argument\n" );
+		fprintf ( stderr, "Missing argument\n" );
 		return 0;
 	}
 	if ( argc > 2 ) {
 		fprintf ( stderr, "Too many arguments\n" );
 		return 0;
 	}
-	pos = parse_position ( argv[1] );
+	pos = parse_id ( argv[1] );
 	if ( pos < 0 )
 		return 0;
 
@@ -553,7 +572,7 @@ static GOptionEntry efibootdel_options[] = {
 
 /** "efibootdel" subcommand */
 struct efi_boot_command efibootdel = {
-	.description = "<position> - Delete EFI boot entry",
+	.description = "<position>|<name> - Delete EFI boot entry",
 	.options = efibootdel_options,
 	.exec = efibootdel_exec,
 };
