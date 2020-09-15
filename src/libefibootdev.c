@@ -788,10 +788,8 @@ static int efiboot_autoindex ( struct efi_boot_entry *entry ) {
 			continue;
 
 		/* Record selected index */
-		entry->index = index;
-
-		/* Mark as modified */
-		entry->modified = true;
+		if ( ! efiboot_set_index ( entry, index ) )
+			return 0;
 
 		return 1;
 	}
