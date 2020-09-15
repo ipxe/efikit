@@ -67,6 +67,10 @@ extern int efiboot_set_paths ( struct efi_boot_entry *entry,
 			       unsigned int count );
 extern int efiboot_set_path ( struct efi_boot_entry *entry, unsigned int index,
 			      const EFI_DEVICE_PATH_PROTOCOL *path );
+extern int efiboot_set_paths_text ( struct efi_boot_entry *entry,
+				    const char **texts, unsigned int count );
+extern int efiboot_set_path_text ( struct efi_boot_entry *entry,
+				   unsigned int index, const char *text );
 extern const void * efiboot_data ( const struct efi_boot_entry *entry );
 extern size_t efiboot_data_len ( const struct efi_boot_entry *entry );
 extern int efiboot_set_data ( struct efi_boot_entry *entry, const void *data,

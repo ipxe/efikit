@@ -554,7 +554,7 @@ efiboot_path ( const struct efi_boot_entry *entry, unsigned int index ) {
  *
  * @v entry		EFI boot entry
  * @v index		Path index
- * @ret path		Device path (or NULL on error)
+ * @ret text		Device path textual representation (or NULL on error)
  *
  * Path index 0 is guaranteed to always exist.
  */
@@ -664,6 +664,83 @@ int efiboot_set_path ( struct efi_boot_entry *entry, unsigned int index,
 	free ( paths );
  err_alloc:
  err_count:
+	return 0;
+}
+
+/**
+ * Set device paths by textual representation
+ *
+ * @v entry		EFI boot entry
+ * @v texts		Device path textual representations
+ * @v count		Number of device paths (must be at least 1)
+ * @ret ok		Success indicator
+ */
+int efiboot_set_paths_text ( struct efi_boot_entry *entry, const char **texts,
+			     unsigned int count ) {
+	EFI_DEVICE_PATH_PROTOCOL **paths;
+	int i;
+
+	/* Allocate path list */
+	paths = malloc ( count * sizeof ( paths[0] ) );
+	if ( ! paths )
+		goto err_alloc;
+
+	/* Construct path list */
+	for ( i = 0 ; i < ( ( int ) count ) ; i++ ) {
+		paths[i] = efidp_from_text ( texts[i] );
+		if ( ! paths[i] )
+			goto err_from_text;
+	}
+
+	/* Set paths */
+	if ( ! efiboot_set_paths ( entry, paths, count ) )
+		goto err_set_paths;
+
+	/* Free paths */
+	for ( i = 0 ; i < ( ( int ) count ) ; i++ )
+		free ( paths[i] );
+	free ( paths );
+
+	return 1;
+
+ err_set_paths:
+ err_from_text:
+	for ( i-- ; i >= 0 ; i-- )
+		free ( paths[i] );
+	free ( paths );
+ err_alloc:
+	return 0;
+}
+
+/**
+ * Set device path by textual representation
+ *
+ * @v entry		EFI boot entry
+ * @v index		Path index
+ * @v text		Device path textual representation
+ * @ret ok		Success indicator
+ */
+int efiboot_set_path_text ( struct efi_boot_entry *entry, unsigned int index,
+			    const char *text ) {
+	EFI_DEVICE_PATH_PROTOCOL *path;
+
+	/* Convert to device path */
+	path = efidp_from_text ( text );
+	if ( ! path )
+		goto err_from_text;
+
+	/* Set device path */
+	if ( ! efiboot_set_path ( entry, index, path ) )
+		goto err_set_path;
+
+	/* Free device path */
+	free ( path );
+
+	return 1;
+
+ err_set_path:
+	free ( path );
+ err_from_text:
 	return 0;
 }
 

@@ -71,24 +71,17 @@ static void assert_efiboot_entry ( const struct efi_boot_entry *entry,
 static void assert_efiboot_to_option ( const struct efi_boot_entry_test *test,
 				       const EFI_LOAD_OPTION *expected,
 				       size_t expected_len ) {
-	EFI_DEVICE_PATH_PROTOCOL *paths[test->count];
 	struct efi_boot_entry *entry;
 	EFI_LOAD_OPTION *option;
 	size_t len;
-	unsigned int i;
-
-	/* Construct device paths */
-	for ( i = 0 ; i < test->count ; i++ ) {
-		paths[i] = efidp_from_text ( test->paths[i] );
-		assert_non_null ( paths[i] );
-	}
 
 	/* Construct boot entry */
 	entry = efiboot_new ();
 	assert_non_null ( entry );
 	assert_true ( efiboot_set_attributes ( entry, test->attributes ) );
 	assert_true ( efiboot_set_description ( entry, test->description ) );
-	assert_true ( efiboot_set_paths ( entry, paths, test->count ) );
+	assert_true ( efiboot_set_paths_text ( entry, test->paths,
+					       test->count ) );
 	assert_true ( efiboot_set_data ( entry, test->data, test->len ) );
 	assert_efiboot_entry ( entry, test );
 
@@ -103,10 +96,6 @@ static void assert_efiboot_to_option ( const struct efi_boot_entry_test *test,
 
 	/* Free boot entry */
 	efiboot_free ( entry );
-
-	/* Free device paths */
-	for ( i = 0 ; i < test->count ; i++ )
-		free ( paths[i] );
 }
 
 /**
