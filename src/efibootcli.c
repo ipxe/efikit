@@ -70,6 +70,9 @@ static gboolean data_flag = FALSE;
 /** Additional data value (base64-encoded) */
 static const char *data_value = NULL;
 
+/** Quiet flag */
+static gboolean quiet_flag = FALSE;
+
 /**
  * Parse load option type
  *
@@ -496,6 +499,10 @@ static int efibootadd_exec ( int argc, char **argv ) {
 	if ( ! set_entry ( 0 ) )
 		goto err_set_entry;
 
+	/* Show created variable name, if applicable */
+	if ( ! quiet_flag )
+		printf ( "%s\n", efiboot_name ( entry ) );
+
 	/* Free new entry */
 	efiboot_free ( entry );
 
@@ -523,6 +530,8 @@ static GOptionEntry efibootadd_options[] = {
 	  "Path(s)", "<path>..." },
 	{ "data", 'x', 0, G_OPTION_ARG_STRING, &data_value,
 	  "Additional data", "<base64 data>" },
+	{ "quiet", 'q', 0, G_OPTION_ARG_NONE, &quiet_flag,
+	  "Do not show created variable name", NULL },
 	{}
 };
 
