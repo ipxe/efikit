@@ -894,6 +894,29 @@ int efiboot_save ( struct efi_boot_entry *entry ) {
 }
 
 /**
+ * Delete boot entry EFI variable
+ *
+ * @v entry		EFI boot entry
+ * @ret ok		Success indicator
+ */
+int efiboot_del ( struct efi_boot_entry *entry ) {
+
+	/* Do nothing if there is no corresponding variable */
+	if ( entry->index == EFIBOOT_INDEX_AUTO )
+		return 1;
+
+	/* Delete variable */
+	if ( ! efivars_delete ( efiboot_name ( entry ) ) )
+		return 0;
+
+	/* Clear index */
+	if ( ! efiboot_set_index ( entry, EFIBOOT_INDEX_AUTO ) )
+		return 0;
+
+	return 1;
+}
+
+/**
  * Free EFI boot entry list
  *
  * @v entries		List of boot entries

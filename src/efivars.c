@@ -35,6 +35,14 @@ int efivars_read ( const char *name, void **data, size_t *len );
 int efivars_write ( const char *name, const void *data, size_t len );
 
 /**
+ * Delete global variable
+ *
+ * @v name		Variable name
+ * @ret ok		Success indicator
+ */
+int efivars_delete ( const char *name );
+
+/**
  * Check for existence of global variable
  *
  * @v name		Variable name
@@ -74,6 +82,15 @@ int efivars_write ( const char *name, const void *data, size_t len ) {
 				  EFI_VARIABLE_RUNTIME_ACCESS ),
 				( S_IRUSR | S_IWUSR |
 				  S_IRGRP | S_IROTH ) ) != 0 )
+		return 0;
+
+	return 1;
+}
+
+int efivars_delete ( const char *name ) {
+
+	/* Delete variable */
+	if ( efi_del_variable ( EFI_GLOBAL_GUID, name ) != 0 )
 		return 0;
 
 	return 1;
@@ -217,6 +234,12 @@ int efivars_write ( const char *name, const void *data, size_t len ) {
 	return 1;
 }
 
+int efivars_delete ( const char *name ) {
+
+	/* Delete variable by setting as zero-length */
+	return efivars_write ( name, NULL, 0 );
+}
+
 int efivars_exists ( const char *name ) {
 	void *data;
 	size_t len;
@@ -256,6 +279,12 @@ int efivars_write ( const char *name, const void *data, size_t len ) {
 	( void ) name;
 	( void ) data;
 	( void ) len;
+	errno = ENOTSUP;
+	return 0;
+}
+
+int efivars_delete ( const char *name ) {
+	( void ) name;
 	errno = ENOTSUP;
 	return 0;
 }

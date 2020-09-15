@@ -76,6 +76,7 @@ extern struct efi_boot_entry * efiboot_new ( void );
 extern struct efi_boot_entry * efiboot_load ( enum efi_boot_option_type type,
 					      unsigned int index );
 extern int efiboot_save ( struct efi_boot_entry *entry );
+extern int efiboot_del ( struct efi_boot_entry *entry );
 extern void efiboot_free_all ( struct efi_boot_entry **entries );
 extern struct efi_boot_entry **
 efiboot_load_all ( enum efi_boot_option_type type );

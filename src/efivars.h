@@ -14,6 +14,7 @@
 
 extern int efivars_read ( const char *name, void **data, size_t *len );
 extern int efivars_write ( const char *name, const void *data, size_t len );
+extern int efivars_delete ( const char *name );
 extern int efivars_exists ( const char *name );
 
 #endif /* _EFIVARS_H */
