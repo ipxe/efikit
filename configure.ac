@@ -1,5 +1,5 @@
 # Configure autoconf
-AC_INIT([efikit], [0.1], [mbrown@fensystems.co.uk])
+AC_INIT([efikit], [0.2], [mbrown@fensystems.co.uk])
 AC_CONFIG_MACRO_DIRS([m4])
 AC_CONFIG_SRCDIR([include/edk2/ProcessorBind.h])
 AC_CONFIG_AUX_DIR([build-aux])
