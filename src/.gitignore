@@ -1,3 +1,6 @@
-/efibootdump
+/efibootadd
+/efibootdel
+/efibootmod
+/efibootshow
 /efidevpath
 /efikittest

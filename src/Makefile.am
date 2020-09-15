@@ -14,11 +14,15 @@ AM_CFLAGS = \
 AM_LDFLAGS = -no-undefined
 
 bin_PROGRAMS = \
-	efidevpath \
-	efibootdump
+	efibootadd \
+	efibootdel \
+	efibootmod \
+	efibootshow \
+	efidevpath
 
 lib_LTLIBRARIES = \
-	libefikit.la
+	libefikit.la \
+	libefibootcli.la
 
 noinst_LTLIBRARIES = \
 	libcommon.la \
@@ -119,17 +123,43 @@ efidevpath_LDADD = \
 
 ###############################################################################
 #
-# EFI boot dump command-line tool
+# EFI boot device command-line tools
 #
 ###############################################################################
 
-efibootdump_CPPFLAGS = \
+libefibootcli_la_SOURCES = \
+	efibootcli.c \
+	efibootcli.h
+
+libefibootcli_la_CPPFLAGS = \
 	$(GLIB_CFLAGS) \
+	$(CODE_COVERAGE_CPPFLAGS) \
 	$(AM_CPPFLAGS)
 
-efibootdump_LDADD = \
+libefibootcli_la_CFLAGS = \
+	$(CODE_COVERAGE_CFLAGS) \
+	$(AM_CFLAGS)
+
+libefibootcli_la_LDFLAGS = \
+	-export-symbols-regex '^efiboot' \
+	$(AM_LDFLAGS)
+
+libefibootcli_la_LIBADD = \
 	libefikit.la \
-	$(GLIB_LIBS)
+	$(GLIB_LIBS) \
+	$(CODE_COVERAGE_LIBS)
+
+efibootadd_LDADD = \
+	libefibootcli.la
+
+efibootdel_LDADD = \
+	libefibootcli.la
+
+efibootmod_LDADD = \
+	libefibootcli.la
+
+efibootshow_LDADD = \
+	libefibootcli.la
 
 ###############################################################################
 #
