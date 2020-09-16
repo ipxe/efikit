@@ -65,7 +65,7 @@ int main ( int argc, char **argv ) {
 		/* Convert to device path */
 		path = efidp_from_text ( text );
 		if ( ! path ) {
-			g_printerr ( "Could not convert text to path\n" );
+			perror ( "Could not convert text to path" );
 			exit ( EXIT_FAILURE );
 		}
 
@@ -85,7 +85,7 @@ int main ( int argc, char **argv ) {
 
 		/* Check validity */
 		if ( ! efidp_valid ( data, len ) ) {
-			g_printerr ( "Malformed path" );
+			perror ( "Malformed path" );
 			exit ( EXIT_FAILURE );
 		}
 		path = ( ( EFI_DEVICE_PATH_PROTOCOL * ) data );
@@ -93,7 +93,7 @@ int main ( int argc, char **argv ) {
 		/* Convert to text */
 		text = efidp_to_text ( path, display_only, allow_shortcut );
 		if ( ! text ) {
-			g_printerr ( "Could not convert path to text\n" );
+			perror ( "Could not convert path to text" );
 			exit ( EXIT_FAILURE );
 		}
 
