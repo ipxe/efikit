@@ -11,6 +11,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <ctype.h>
 #include <Uefi/UefiBaseType.h>
 #include <Protocol/DevicePath.h>
 #include <Protocol/DebugPort.h>
@@ -52,6 +53,64 @@ bool efidp_valid ( const void *path, size_t max_len ) {
 	if ( ! IsDevicePathValid ( path, max_len ) ) {
 		errno = EINVAL;
 		return false;
+	}
+
+	return true;
+}
+
+/**
+ * Check plausibility of device path
+ *
+ * @v path		EFI device path
+ * @ret plausible	Device path is plausible
+ *
+ * When constructing a device path from a textual representation, EFI
+ * will treat any unrecognised string as a filename.  This can lead to
+ * unexpected behaviour.  For example, if a device path component
+ * Uri() is mistyped as URI(), it will become a FILEPATH_DEVICE_PATH
+ * with the filename "URI()", rather than becoming a URI_DEVICE_PATH.
+ *
+ * It is implausible that any real FILEPATH_DEVICE_PATH would be of
+ * the form "Xxx(...)".  This function checks for such plausibility.
+ */
+bool efidp_plausible ( const EFI_DEVICE_PATH_PROTOCOL *path ) {
+	FILEPATH_DEVICE_PATH *filepath;
+	CHAR16 *filename;
+	unsigned int remaining;
+
+	/* Iterate over device path nodes */
+	for ( ; ! IsDevicePathEndType ( path ) ;
+	      path = NextDevicePathNode ( path ) ) {
+
+		/* Ignore everything other than FILEPATH_DEVICE_PATH */
+		if ( DevicePathType ( path ) != MEDIA_DEVICE_PATH )
+			continue;
+		if ( DevicePathSubType ( path ) != MEDIA_FILEPATH_DP )
+			continue;
+
+		/* Extract filename */
+		filepath = ( ( FILEPATH_DEVICE_PATH * ) path );
+		filename = filepath->PathName;
+		remaining = ( ( DevicePathNodeLength ( path ) -
+				SIZE_OF_FILEPATH_DEVICE_PATH ) /
+			      sizeof ( filename[0] ) );
+
+		/* Trim trailing NUL (if present) */
+		if ( remaining && ( filename[remaining - 1] == L'\0' ) )
+			remaining--;
+
+		/* Trim initial alphanumeric characters */
+		while ( remaining && isalnum ( *filename ) ) {
+			filename++;
+			remaining--;
+		}
+
+		/* Treat as implausible if remaining portion matches "(...)" */
+		if ( remaining && ( filename[0] == L'(' ) &&
+		     ( filename[remaining - 1] == L')' ) ) {
+			errno = EINVAL;
+			return false;
+		}
 	}
 
 	return true;

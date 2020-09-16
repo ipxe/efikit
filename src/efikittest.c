@@ -24,6 +24,7 @@ static const struct CMUnitTest tests[] = {
 	cmocka_unit_test ( test_uripath ),
 	cmocka_unit_test ( test_fvfilepath ),
 	cmocka_unit_test ( test_hddfilepath ),
+	cmocka_unit_test ( test_implausiblepath ),
 	cmocka_unit_test ( test_hddopt ),
 	cmocka_unit_test ( test_badopt ),
 	cmocka_unit_test ( test_shellopt ),

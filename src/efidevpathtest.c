@@ -10,6 +10,7 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <setjmp.h>
+#include <string.h>
 #include <cmocka.h>
 #include <efidevpath.h>
 
@@ -204,4 +205,29 @@ void test_hddfilepath ( void **state ) {
 
 	( void ) state;
 	assert_efidp_text ( &path.hd.Header, true, true, text );
+}
+
+/** Test implausible device paths */
+void test_implausiblepath ( void **state ) {
+	static struct {
+		HARDDRIVE_DEVICE_PATH hd;
+		EFI_DEVICE_PATH_PROTOCOL file;
+		CHAR16 filename[26];
+		EFI_DEVICE_PATH_PROTOCOL end;
+	} __attribute__ (( packed )) path = {
+		.hd = EFIDP_HD_GPT ( 1, 0x800, 0x12c000,
+				     ( 0x09, 0x79, 0xf5, 0xc8, 0x89, 0xd5,
+				       0xa1, 0x41, 0x99, 0x58, 0x44, 0xc7,
+				       0xf2, 0x29, 0xe1, 0x50 ) ),
+		.file = EFIDP_FILE_HDR ( sizeof ( path.filename ) ),
+		.filename = L"URI(http://boot.ipxe.org)",
+		.end = EFIDP_END,
+	};
+
+	( void ) state;
+	assert_true ( efidp_valid ( &path.hd.Header, sizeof ( path ) ) );
+	assert_false ( efidp_plausible ( &path.hd.Header ) );
+	memcpy ( path.filename, L"\\EFI\\fedora33\\shimx64.efi",
+		 sizeof ( path.filename ) );
+	assert_true ( efidp_plausible ( &path.hd.Header ) );
 }
