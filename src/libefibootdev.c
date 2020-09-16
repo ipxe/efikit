@@ -687,7 +687,7 @@ int efiboot_set_paths_text ( struct efi_boot_entry *entry, const char **texts,
 
 	/* Construct path list */
 	for ( i = 0 ; i < ( ( int ) count ) ; i++ ) {
-		paths[i] = efidp_from_text ( texts[i] );
+		paths[i] = efidp_from_text ( texts[i], false );
 		if ( ! paths[i] )
 			goto err_from_text;
 	}
@@ -725,7 +725,7 @@ int efiboot_set_path_text ( struct efi_boot_entry *entry, unsigned int index,
 	EFI_DEVICE_PATH_PROTOCOL *path;
 
 	/* Convert to device path */
-	path = efidp_from_text ( text );
+	path = efidp_from_text ( text, false );
 	if ( ! path )
 		goto err_from_text;
 

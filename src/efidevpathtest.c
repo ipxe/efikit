@@ -62,7 +62,7 @@ void assert_efidp_from_text ( const char *text,
 	size_t len;
 
 	/* Convert text to device path */
-	path = efidp_from_text ( text );
+	path = efidp_from_text ( text, false );
 	assert_non_null ( path );
 
 	/* Check length */

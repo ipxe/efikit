@@ -21,6 +21,9 @@ static gboolean display_only = FALSE;
 /** Use shortcut representation" */
 static gboolean allow_shortcut = FALSE;
 
+/** Allow implausible paths */
+static gboolean allow_implausible = FALSE;
+
 /** Command-line options */
 static GOptionEntry options[] = {
 	{ "displayonly", 'd', 0, G_OPTION_ARG_NONE, &display_only,
@@ -29,6 +32,8 @@ static GOptionEntry options[] = {
 	  "Use shortcut representation", NULL },
 	{ "text", 't', 0, G_OPTION_ARG_STRING, &text,
 	  "Convert text back to EFI device path", "TEXT" },
+	{ "implausible", 'i', 0, G_OPTION_ARG_NONE, &allow_implausible,
+	  "Allow implausible paths", NULL },
 	{}
 };
 
@@ -63,7 +68,7 @@ int main ( int argc, char **argv ) {
 	if ( text ) {
 
 		/* Convert to device path */
-		path = efidp_from_text ( text );
+		path = efidp_from_text ( text, allow_implausible );
 		if ( ! path ) {
 			perror ( "Could not convert text to path" );
 			exit ( EXIT_FAILURE );

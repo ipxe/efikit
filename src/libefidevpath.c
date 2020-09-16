@@ -130,12 +130,14 @@ size_t efidp_len ( const EFI_DEVICE_PATH_PROTOCOL *path ) {
  * Construct device path from textual representation
  *
  * @v text		Textual representation (in UTF-8)
+ * @v allow_implausible	Allow implausible device paths
  * @ret path		EFI device path, or NULL on error
  *
  * The device path is allocated using malloc() and must eventually be
  * freed by the caller.
  */
-EFI_DEVICE_PATH_PROTOCOL * efidp_from_text ( const char *text ) {
+EFI_DEVICE_PATH_PROTOCOL * efidp_from_text ( const char *text,
+					     bool allow_implausible ) {
 	CHAR16 *efitext;
 	EFI_DEVICE_PATH_PROTOCOL *efidp;
 
@@ -151,11 +153,16 @@ EFI_DEVICE_PATH_PROTOCOL * efidp_from_text ( const char *text ) {
 		goto err_efidp;
 	}
 
+	/* Check for plausibility */
+	if ( ! ( allow_implausible || efidp_plausible ( efidp ) ) )
+		goto err_implausible;
+
 	/* Free EFI string */
 	free ( efitext );
 
 	return efidp;
 
+ err_implausible:
 	free ( efidp );
  err_efidp:
 	free ( efitext );

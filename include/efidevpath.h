@@ -118,7 +118,8 @@ extern "C" {
 extern bool efidp_valid ( const void *path, size_t max_len );
 extern bool efidp_plausible ( const EFI_DEVICE_PATH_PROTOCOL *path );
 extern size_t efidp_len ( const EFI_DEVICE_PATH_PROTOCOL *path );
-extern EFI_DEVICE_PATH_PROTOCOL * efidp_from_text ( const char *text );
+extern EFI_DEVICE_PATH_PROTOCOL * efidp_from_text ( const char *text,
+						    bool allow_implausible );
 extern char * efidp_to_text ( const EFI_DEVICE_PATH_PROTOCOL *path,
 			      bool display_only, bool allow_shortcuts );
 
