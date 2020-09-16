@@ -47,7 +47,14 @@ EFI_GUID gEfiPersistentVirtualCdGuid = EFI_PERSISTENT_VIRTUAL_CD_GUID;
  * @ret valid		Device path is valid
  */
 bool efidp_valid ( const void *path, size_t max_len ) {
-	return IsDevicePathValid ( path, max_len );
+
+	/* Check validity */
+	if ( ! IsDevicePathValid ( path, max_len ) ) {
+		errno = EINVAL;
+		return false;
+	}
+
+	return true;
 }
 
 /**
